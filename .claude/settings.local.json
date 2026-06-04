@@ -9,7 +9,10 @@
       "PowerShell(New-Item *)",
       "PowerShell(Remove-Item *)",
       "PowerShell(dotnet build *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "PowerShell(gh auth *)",
+      "Bash(gh auth *)"
     ]
   }
 }
