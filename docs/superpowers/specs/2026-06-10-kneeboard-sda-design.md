@@ -104,7 +104,7 @@ The main viewer. Layout:
 
 Tab switching sets `SelectedSectionIndex`, swaps `CarouselView.ItemsSource`, and resets to page 0.
 
-The 📂 icon triggers the same `DocumentService.PickAndLoadAsync()` flow, replacing the current document in place.
+The 📂 icon triggers the same `DocumentService.PickAndLoadAsync()` flow. The current document remains visible until the new one is fully loaded; then it is replaced in place. If the user cancels the picker or loading fails, the current document stays open.
 
 ---
 
