@@ -9,6 +9,9 @@
     <UseMaui>false</UseMaui>
     <EnableMauiImageProcessing>false</EnableMauiImageProcessing>
     <DisableResizetizer>true</DisableResizetizer>
+    <!-- Disable Windows App SDK auto-initialization; tests run outside of MSIX context -->
+    <WindowsAppSdkDeploymentManagerInitialize>false</WindowsAppSdkDeploymentManagerInitialize>
+    <WindowsAppSdkAutoInitialize>false</WindowsAppSdkAutoInitialize>
   </PropertyGroup>
 
   <ItemGroup>
