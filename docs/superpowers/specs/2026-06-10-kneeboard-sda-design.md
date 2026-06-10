@@ -128,7 +128,7 @@ On success
   → PdfService.RenderAllPagesAsync() for each PDF section
   → Loading overlay shown during render
   → CarouselView populated, overlay dismissed
-  → First tab selected by default
+  → First tab selected by default - always a datacard section
 
 User taps inactive tab
   → SelectedSectionIndex updated

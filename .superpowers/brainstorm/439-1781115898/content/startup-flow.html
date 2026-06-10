@@ -1,0 +1,65 @@
+<h2>What happens when the app starts?</h2>
+<p class="subtitle">The user needs to pick a Kneeboard JSON file. When and how should this happen?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="immediate-picker" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#1a1a2e;border-radius:8px;overflow:hidden;font-size:12px;font-family:monospace;">
+        <div style="height:30px;background:#16213e;display:flex;align-items:center;padding:0 10px;color:#888;font-size:11px;">
+          Kneeboard
+        </div>
+        <div style="height:170px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#666;">
+          <div style="border:1px solid #333;border-radius:4px;padding:6px 12px;background:#0d0d1a;width:200px;">
+            <div style="color:#888;font-size:10px;margin-bottom:4px;">Open Kneeboard File</div>
+            <div style="color:#555;font-size:10px;">mission-2024-06-10.kneeboard</div>
+          </div>
+          <div style="color:#555;font-size:10px;">[ OS file picker dialog ]</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>OS file picker on launch</h3>
+      <p>App immediately opens the system file picker. No welcome screen — straight to business. Clean, minimal, zero extra UI to build.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="welcome-screen" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#1a1a2e;border-radius:8px;overflow:hidden;font-size:12px;font-family:monospace;">
+        <div style="height:30px;background:#16213e;display:flex;align-items:center;padding:0 10px;color:#888;font-size:11px;">
+          Kneeboard
+        </div>
+        <div style="height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+          <div style="color:#e94560;font-size:18px;font-weight:bold;">✈ Kneeboard</div>
+          <div style="background:#e94560;color:#fff;padding:6px 18px;border-radius:4px;font-size:11px;">Open Kneeboard File…</div>
+          <div style="color:#444;font-size:10px;">No recent files</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Welcome screen + Open button</h3>
+      <p>A minimal launch screen with an "Open" button (and optionally a recent files list). More polish, slightly more to build.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="reopen-last" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#1a1a2e;border-radius:8px;overflow:hidden;font-size:12px;font-family:monospace;">
+        <div style="display:flex;background:#16213e;border-bottom:1px solid #0f3460;">
+          <div style="padding:8px 16px;background:#e94560;color:#fff;border-radius:4px 4px 0 0;margin:6px 4px 0;font-size:11px;">Mission Datacard</div>
+          <div style="padding:8px 16px;color:#aaa;margin-top:6px;font-size:11px;">Airfields Map</div>
+          <div style="margin-left:auto;padding:6px 10px;color:#555;font-size:10px;">📂</div>
+        </div>
+        <div style="height:160px;display:flex;align-items:center;justify-content:center;color:#555;font-size:13px;">
+          [ last document auto-loaded ]
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Auto-reopen last document</h3>
+      <p>App remembers and reloads the last used file. A small "open file" icon in the tab bar lets the user switch. Fast for daily use, but requires persisting state.</p>
+    </div>
+  </div>
+
+</div>

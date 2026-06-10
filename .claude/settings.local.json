@@ -12,7 +12,9 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "PowerShell(gh auth *)",
-      "Bash(gh auth *)"
+      "Bash(gh auth *)",
+      "Bash(C:/Users/tpase/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/brainstorming/scripts/start-server.sh *)",
+      "Skill(update-config)"
     ]
   }
 }
