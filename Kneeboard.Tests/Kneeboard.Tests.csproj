@@ -6,6 +6,9 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <UseMaui>false</UseMaui>
+    <EnableMauiImageProcessing>false</EnableMauiImageProcessing>
+    <DisableResizetizer>true</DisableResizetizer>
   </PropertyGroup>
 
   <ItemGroup>
