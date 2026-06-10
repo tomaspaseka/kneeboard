@@ -3,6 +3,7 @@ using Android.Graphics.Pdf;
 using Android.OS;
 using Kneeboard.Services;
 
+using IOPath = System.IO.Path;
 using JavaFile = Java.IO.File;
 
 namespace Kneeboard.Platforms.Android;
@@ -16,7 +17,7 @@ public class PdfService : IPdfService
             ParcelFileMode.ReadOnly);
 
         using var renderer = new PdfRenderer(fd!);
-        var tempDir = Path.Combine(Path.GetTempPath(), "kneeboard_pdf", Path.GetFileNameWithoutExtension(pdfPath));
+        var tempDir = IOPath.Combine(IOPath.GetTempPath(), "kneeboard_pdf", IOPath.GetFileNameWithoutExtension(pdfPath));
         if (Directory.Exists(tempDir)) Directory.Delete(tempDir, recursive: true);
         Directory.CreateDirectory(tempDir);
         var pages = new List<string>(renderer.PageCount);
@@ -32,7 +33,7 @@ public class PdfService : IPdfService
                 using var ms = new MemoryStream();
                 bitmap.Compress(Bitmap.CompressFormat.Png!, 100, ms);
 
-                var pagePath = Path.Combine(tempDir, $"page_{i:D4}.png");
+                var pagePath = IOPath.Combine(tempDir, $"page_{i:D4}.png");
                 File.WriteAllBytes(pagePath, ms.ToArray());
                 pages.Add(pagePath);
             }
