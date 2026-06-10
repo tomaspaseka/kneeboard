@@ -17,6 +17,7 @@ public class PdfService : IPdfService
 
         using var renderer = new PdfRenderer(fd!);
         var tempDir = Path.Combine(Path.GetTempPath(), "kneeboard_pdf", Path.GetFileNameWithoutExtension(pdfPath));
+        if (Directory.Exists(tempDir)) Directory.Delete(tempDir, recursive: true);
         Directory.CreateDirectory(tempDir);
         var pages = new List<string>(renderer.PageCount);
 

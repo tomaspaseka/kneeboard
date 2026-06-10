@@ -12,6 +12,7 @@ public class PdfService : IPdfService
         var file = await StorageFile.GetFileFromPathAsync(pdfPath);
         var pdfDocument = await PdfDocument.LoadFromFileAsync(file);
         var tempDir = Path.Combine(Path.GetTempPath(), "kneeboard_pdf", Path.GetFileNameWithoutExtension(pdfPath));
+        if (Directory.Exists(tempDir)) Directory.Delete(tempDir, recursive: true);
         Directory.CreateDirectory(tempDir);
         var pages = new List<string>((int)pdfDocument.PageCount);
 
