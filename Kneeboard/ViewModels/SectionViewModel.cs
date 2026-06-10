@@ -10,7 +10,7 @@ public partial class SectionViewModel : BaseViewModel
     [ObservableProperty]
     public partial bool IsSelected { get; set; }
 
-    public IReadOnlyList<ImageSource> Pages { get; set; } = [];
+    public IReadOnlyList<string> Pages { get; set; } = [];
 
     public SectionViewModel(KneeboardSection section)
     {

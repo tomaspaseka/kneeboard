@@ -9,14 +9,16 @@ namespace Kneeboard.Platforms.Android;
 
 public class PdfService : IPdfService
 {
-    public Task<IReadOnlyList<ImageSource>> RenderAllPagesAsync(string pdfPath)
+    public Task<IReadOnlyList<string>> RenderAllPagesAsync(string pdfPath)
     {
         using var fd = ParcelFileDescriptor.Open(
             new JavaFile(pdfPath),
             ParcelFileMode.ReadOnly);
 
         using var renderer = new PdfRenderer(fd!);
-        var pages = new List<ImageSource>(renderer.PageCount);
+        var tempDir = Path.Combine(Path.GetTempPath(), "kneeboard_pdf", Path.GetFileNameWithoutExtension(pdfPath));
+        Directory.CreateDirectory(tempDir);
+        var pages = new List<string>(renderer.PageCount);
 
         for (int i = 0; i < renderer.PageCount; i++)
         {
@@ -28,9 +30,10 @@ public class PdfService : IPdfService
 
                 using var ms = new MemoryStream();
                 bitmap.Compress(Bitmap.CompressFormat.Png!, 100, ms);
-                var bytes = ms.ToArray();
 
-                pages.Add(ImageSource.FromStream(() => new MemoryStream(bytes)));
+                var pagePath = Path.Combine(tempDir, $"page_{i:D4}.png");
+                File.WriteAllBytes(pagePath, ms.ToArray());
+                pages.Add(pagePath);
             }
             catch
             {
@@ -38,6 +41,6 @@ public class PdfService : IPdfService
             }
         }
 
-        return Task.FromResult<IReadOnlyList<ImageSource>>(pages);
+        return Task.FromResult<IReadOnlyList<string>>(pages);
     }
 }

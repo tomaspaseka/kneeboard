@@ -7,11 +7,13 @@ namespace Kneeboard.Platforms.Windows;
 
 public class PdfService : IPdfService
 {
-    public async Task<IReadOnlyList<ImageSource>> RenderAllPagesAsync(string pdfPath)
+    public async Task<IReadOnlyList<string>> RenderAllPagesAsync(string pdfPath)
     {
         var file = await StorageFile.GetFileFromPathAsync(pdfPath);
         var pdfDocument = await PdfDocument.LoadFromFileAsync(file);
-        var pages = new List<ImageSource>((int)pdfDocument.PageCount);
+        var tempDir = Path.Combine(Path.GetTempPath(), "kneeboard_pdf", Path.GetFileNameWithoutExtension(pdfPath));
+        Directory.CreateDirectory(tempDir);
+        var pages = new List<string>((int)pdfDocument.PageCount);
 
         for (uint i = 0; i < pdfDocument.PageCount; i++)
         {
@@ -26,7 +28,9 @@ public class PdfService : IPdfService
                 var bytes = new byte[stream.Size];
                 reader.ReadBytes(bytes);
 
-                pages.Add(ImageSource.FromStream(() => new MemoryStream(bytes)));
+                var pagePath = Path.Combine(tempDir, $"page_{i:D4}.png");
+                await File.WriteAllBytesAsync(pagePath, bytes);
+                pages.Add(pagePath);
             }
             catch
             {
