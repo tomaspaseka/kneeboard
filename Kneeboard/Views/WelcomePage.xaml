@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Kneeboard.ViewModels"
+             x:Class="Kneeboard.Views.WelcomePage"
+             x:DataType="vm:WelcomeViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#111827">
+
+    <Grid RowDefinitions="*,Auto,*">
+
+        <VerticalStackLayout Grid.Row="1"
+                             HorizontalOptions="Center"
+                             Spacing="16">
+
+            <Label Text="✈ KNEEBOARD"
+                   FontSize="32"
+                   FontAttributes="Bold"
+                   TextColor="#E94560"
+                   HorizontalOptions="Center"
+                   CharacterSpacing="3" />
+
+            <Label Text="Ready for preflight"
+                   FontSize="13"
+                   TextColor="#6B7280"
+                   HorizontalOptions="Center" />
+
+            <Button Text="OPEN KNEEBOARD FILE…"
+                    Command="{Binding OpenFileCommand}"
+                    IsEnabled="{Binding IsNotBusy}"
+                    BackgroundColor="#E94560"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CharacterSpacing="1"
+                    CornerRadius="6"
+                    Padding="28,10"
+                    Margin="0,12,0,0" />
+
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding HasError}"
+                   TextColor="#F87171"
+                   FontSize="13"
+                   HorizontalOptions="Center"
+                   HorizontalTextAlignment="Center"
+                   MaximumWidthRequest="400" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               Color="#E94560"
+                               HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+
+    </Grid>
+
+</ContentPage>
