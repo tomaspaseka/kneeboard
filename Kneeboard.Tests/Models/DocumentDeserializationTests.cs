@@ -88,4 +88,31 @@ public class DocumentDeserializationTests
         Assert.Throws<JsonException>(() =>
             JsonSerializer.Deserialize<KneeboardDocument>(json, Options));
     }
+
+    [Fact]
+    public void Deserialize_MissingTypeField_ThrowsJsonException()
+    {
+        const string json = """
+            {"title":"T","sections":[{"id":"a","label":"A","source":{"path":"/x.pdf"}}]}
+            """;
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<KneeboardDocument>(json, Options));
+    }
+
+    [Fact]
+    public void Deserialize_PdfMissingPath_ThrowsJsonException()
+    {
+        const string json = """
+            {"title":"T","sections":[{"id":"a","label":"A","source":{"type":"pdf"}}]}
+            """;
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<KneeboardDocument>(json, Options));
+    }
+
+    [Fact]
+    public void Deserialize_ImagesMissingFolder_ThrowsJsonException()
+    {
+        const string json = """
+            {"title":"T","sections":[{"id":"a","label":"A","source":{"type":"images"}}]}
+            """;
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<KneeboardDocument>(json, Options));
+    }
 }
