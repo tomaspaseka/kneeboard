@@ -84,7 +84,7 @@ public class DocumentServiceTests : IDisposable
         var result = await new DocumentService().LoadFromPathAsync(docFile);
 
         Assert.False(result.Success);
-        Assert.False(result.Cancelled);
+        Assert.False(result.WasCancelled);
         Assert.Contains("Mission Datacard", result.Error);
         Assert.Contains("not found", result.Error);
     }

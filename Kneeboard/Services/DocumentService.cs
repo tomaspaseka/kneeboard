@@ -20,7 +20,7 @@ public class DocumentService : IDocumentService
         });
 
         return picked is null
-            ? DocumentLoadResult.UserCancelled()
+            ? DocumentLoadResult.Cancelled()
             : await LoadFromPathAsync(picked.FullPath);
     }
 
