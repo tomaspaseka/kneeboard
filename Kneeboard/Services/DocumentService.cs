@@ -46,6 +46,10 @@ public class DocumentService : IDocumentService
         {
             return DocumentLoadResult.Failed("Could not read kneeboard file. Check that it's valid JSON.");
         }
+        catch (FileNotFoundException)
+        {
+            return DocumentLoadResult.Failed($"Kneeboard file not found: {filePath}");
+        }
         catch (Exception ex)
         {
             return DocumentLoadResult.Failed($"Could not open file: {ex.Message}");
