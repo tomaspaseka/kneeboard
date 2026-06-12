@@ -1,0 +1,10 @@
+<!-- Copy this file to Signing.props (same directory) and fill in your local paths.
+     Signing.props is gitignored — never commit it. -->
+<Project>
+  <PropertyGroup>
+    <!-- Absolute or repo-relative path to your .pfx file. -->
+    <PackageCertificateKeyFile>$(MSBuildProjectDirectory)\..\Kneeboard.pfx</PackageCertificateKeyFile>
+    <!-- Leave empty if you generated the cert with no password. -->
+    <PackageCertificatePassword></PackageCertificatePassword>
+  </PropertyGroup>
+</Project>
