@@ -23,10 +23,16 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
-		<!-- MSIX-packaged apps don't need the DeploymentManager module initializer; the
-		     package manifest handles runtime registration. Disabling this prevents the
-		     WinRT COM activation issue when Kneeboard.dll is loaded in test contexts. -->
+		<!-- Keep the auto-generated module initializer disabled so it doesn't fire when
+		     Kneeboard.dll is loaded by the test runner. Bootstrap.Initialize() is called
+		     explicitly in Platforms/Windows/Program.cs instead (runs only on EXE startup). -->
 		<WindowsAppSdkDeploymentManagerInitialize>false</WindowsAppSdkDeploymentManagerInitialize>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<!-- Suppress the auto-generated Program.Main so we can provide our own that calls
+		     Bootstrap.Initialize() before Application.Start(). -->
+		<DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
