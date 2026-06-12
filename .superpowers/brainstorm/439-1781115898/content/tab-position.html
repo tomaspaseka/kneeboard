@@ -1,0 +1,66 @@
+<h2>Where should the tab bar live?</h2>
+<p class="subtitle">This is a fullscreen tablet app — tab position affects thumb reach and visual hierarchy.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="top" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#1a1a2e;border-radius:8px;overflow:hidden;font-family:monospace;font-size:12px;">
+        <div style="display:flex;background:#16213e;border-bottom:1px solid #0f3460;">
+          <div style="padding:8px 20px;background:#e94560;color:#fff;border-radius:4px 4px 0 0;margin:6px 4px 0;">Mission Datacard</div>
+          <div style="padding:8px 20px;color:#aaa;margin-top:6px;">Airfields Map</div>
+        </div>
+        <div style="height:160px;display:flex;align-items:center;justify-content:center;color:#555;font-size:14px;">
+          [ PDF / Image page ]
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 12px;background:#0d0d1a;color:#444;font-size:11px;">
+          <span>◀ Prev</span><span>1 / 8</span><span>Next ▶</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Tabs on top</h3>
+      <p>Traditional desktop pattern. Tab bar is always visible, familiar to Windows users. Page controls at the bottom.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="bottom" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#1a1a2e;border-radius:8px;overflow:hidden;font-family:monospace;font-size:12px;">
+        <div style="height:160px;display:flex;align-items:center;justify-content:center;color:#555;font-size:14px;">
+          [ PDF / Image page ]
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 12px;background:#0d0d1a;color:#444;font-size:11px;">
+          <span>◀ Prev</span><span>1 / 8</span><span>Next ▶</span>
+        </div>
+        <div style="display:flex;background:#16213e;border-top:1px solid #0f3460;">
+          <div style="flex:1;padding:8px;text-align:center;background:#e94560;color:#fff;">Mission Datacard</div>
+          <div style="flex:1;padding:8px;text-align:center;color:#aaa;">Airfields Map</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Tabs on bottom</h3>
+      <p>Thumb-friendly on a handheld tablet. Consistent with mobile apps. Content gets maximum vertical space.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="hidden" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#1a1a2e;border-radius:8px;overflow:hidden;font-family:monospace;font-size:12px;">
+        <div style="height:200px;display:flex;align-items:center;justify-content:center;color:#555;font-size:14px;position:relative;">
+          [ PDF / Image page — full screen ]
+          <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:6px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:#e94560;"></div>
+            <div style="width:8px;height:8px;border-radius:50%;background:#444;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Tabs hidden / swipe only</h3>
+      <p>Truly fullscreen — content takes the whole display. Tabs only visible as dots or via swipe gesture. Best immersion, hardest to discover.</p>
+    </div>
+  </div>
+
+</div>

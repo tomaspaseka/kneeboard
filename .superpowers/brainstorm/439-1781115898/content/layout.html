@@ -1,0 +1,95 @@
+<h2>Screen layouts</h2>
+<p class="subtitle">Two screens — Welcome and Kneeboard viewer. Click to confirm or flag issues.</p>
+
+<div class="split">
+
+  <div class="mockup">
+    <div class="mockup-header">Welcome screen</div>
+    <div class="mockup-body" style="padding:0;">
+      <div style="background:#111827;height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;border-radius:4px;">
+        <div style="font-size:28px;color:#e94560;font-weight:bold;font-family:sans-serif;letter-spacing:2px;">✈ KNEEBOARD</div>
+        <div style="color:#6b7280;font-size:12px;font-family:monospace;">Ready for preflight</div>
+        <div style="margin-top:12px;">
+          <div style="background:#e94560;color:#fff;padding:10px 28px;border-radius:6px;font-family:sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;">OPEN KNEEBOARD FILE…</div>
+        </div>
+        <div style="color:#374151;font-size:10px;font-family:monospace;margin-top:4px;">Select a .kneeboard JSON file</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Kneeboard viewer</div>
+    <div class="mockup-body" style="padding:0;">
+      <div style="background:#111827;height:340px;border-radius:4px;overflow:hidden;display:flex;flex-direction:column;">
+
+        <!-- Tab bar -->
+        <div style="display:flex;background:#1f2937;border-bottom:2px solid #111827;flex-shrink:0;">
+          <div style="padding:10px 20px;background:#e94560;color:#fff;font-family:sans-serif;font-size:12px;font-weight:600;letter-spacing:0.5px;border-bottom:2px solid #e94560;margin-bottom:-2px;">
+            MISSION DATACARD
+          </div>
+          <div style="padding:10px 20px;color:#6b7280;font-family:sans-serif;font-size:12px;font-weight:600;letter-spacing:0.5px;">
+            AIRFIELDS MAP
+          </div>
+          <div style="margin-left:auto;display:flex;align-items:center;padding:0 12px;">
+            <div style="color:#374151;font-family:monospace;font-size:11px;">mission-2024-06-10</div>
+            <div style="color:#374151;font-family:sans-serif;font-size:14px;margin-left:12px;cursor:pointer;">📂</div>
+          </div>
+        </div>
+
+        <!-- Page content (CarouselView) -->
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;position:relative;background:#0d1117;">
+          <!-- Simulated page -->
+          <div style="width:85%;height:220px;background:#1a1a2e;border:1px solid #2d3748;border-radius:2px;display:flex;align-items:center;justify-content:center;">
+            <div style="text-align:center;color:#374151;">
+              <div style="font-size:32px;margin-bottom:8px;">📄</div>
+              <div style="font-family:monospace;font-size:11px;">page 1 of 8</div>
+            </div>
+          </div>
+
+          <!-- Swipe hint arrows (faded) -->
+          <div style="position:absolute;left:6px;top:50%;transform:translateY(-50%);color:#1f2937;font-size:20px;">‹</div>
+          <div style="position:absolute;right:6px;top:50%;transform:translateY(-50%);color:#374151;font-size:20px;">›</div>
+        </div>
+
+        <!-- Page indicator dots -->
+        <div style="display:flex;justify-content:center;gap:5px;padding:8px;background:#0d1117;flex-shrink:0;">
+          <div style="width:6px;height:6px;border-radius:50%;background:#e94560;"></div>
+          <div style="width:6px;height:6px;border-radius:50%;background:#374151;"></div>
+          <div style="width:6px;height:6px;border-radius:50%;background:#374151;"></div>
+          <div style="width:6px;height:6px;border-radius:50%;background:#374151;"></div>
+          <div style="width:6px;height:6px;border-radius:50%;background:#374151;"></div>
+          <div style="width:6px;height:6px;border-radius:50%;background:#374151;"></div>
+          <div style="width:6px;height:6px;border-radius:50%;background:#374151;"></div>
+          <div style="width:6px;height:6px;border-radius:50%;background:#374151;"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top:16px;">
+  <p class="subtitle" style="font-size:12px;">
+    <strong>Tab bar:</strong> active tab highlighted in red, inactive greyed out. Document title + open-file icon on the right.<br>
+    <strong>Content area:</strong> full-width page fill, swipe left/right snaps to next page.<br>
+    <strong>Page indicator:</strong> dot row below content shows position. Fades from view or stays?
+  </p>
+</div>
+
+<div class="options" style="margin-top:8px;">
+  <div class="option" data-choice="dots-always" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Dots always visible</h3>
+      <p>Permanent position indicator — always know where you are in the document</p>
+    </div>
+  </div>
+  <div class="option" data-choice="dots-none" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>No dots — content fills edge to edge</h3>
+      <p>Maximum reading area. Page position not shown (pilot knows the doc)</p>
+    </div>
+  </div>
+</div>

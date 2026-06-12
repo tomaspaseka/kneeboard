@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:vm="clr-namespace:Kneeboard.ViewModels"
+             x:Class="Kneeboard.Views.KneeboardPage"
+             x:DataType="vm:KneeboardViewModel"
+             x:Name="Self"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#0D1117">
+
+    <ContentPage.Resources>
+        <Color x:Key="ActiveDotColor">#E94560</Color>
+        <Color x:Key="InactiveDotColor">#374151</Color>
+        <toolkit:BoolToObjectConverter x:Key="DotColorConverter"
+                                       TrueObject="{StaticResource ActiveDotColor}"
+                                       FalseObject="{StaticResource InactiveDotColor}" />
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Tab bar -->
+        <Grid Grid.Row="0"
+              ColumnDefinitions="*,Auto"
+              BackgroundColor="#1F2937">
+
+            <HorizontalStackLayout Grid.Column="0"
+                                   BindableLayout.ItemsSource="{Binding Sections}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SectionViewModel">
+                        <Button Text="{Binding Title}"
+                                BackgroundColor="Transparent"
+                                TextColor="#6B7280"
+                                FontSize="12"
+                                FontAttributes="Bold"
+                                CharacterSpacing="0.5"
+                                Padding="20,10"
+                                BorderWidth="0"
+                                Command="{Binding Source={x:Reference Self}, Path=BindingContext.SelectSectionCommand}"
+                                CommandParameter="{Binding .}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button"
+                                             Binding="{Binding IsSelected}"
+                                             Value="True">
+                                    <Setter Property="TextColor" Value="White" />
+                                    <Setter Property="BackgroundColor" Value="#E94560" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout Grid.Column="1"
+                                   VerticalOptions="Center"
+                                   Spacing="8"
+                                   Padding="0,0,12,0">
+                <Label Text="{Binding Title}"
+                       TextColor="#4B5563"
+                       FontSize="11"
+                       VerticalOptions="Center" />
+                <Button Text="📂"
+                        Command="{Binding OpenFileCommand}"
+                        BackgroundColor="Transparent"
+                        TextColor="#4B5563"
+                        Padding="6,4"
+                        BorderWidth="0" />
+            </HorizontalStackLayout>
+
+        </Grid>
+
+        <!-- Content area -->
+        <Grid Grid.Row="1">
+
+            <CarouselView ItemsSource="{Binding CurrentPages}"
+                          Position="{Binding CurrentPageIndex, Mode=TwoWay}"
+                          Loop="False"
+                          HorizontalScrollBarVisibility="Never">
+                <CarouselView.ItemTemplate>
+                    <DataTemplate>
+                        <Image Source="{Binding .}"
+                               Aspect="AspectFit"
+                               HorizontalOptions="Fill"
+                               VerticalOptions="Fill" />
+                    </DataTemplate>
+                </CarouselView.ItemTemplate>
+                <CarouselView.EmptyView>
+                    <Label Text="No pages"
+                           TextColor="#6B7280"
+                           FontSize="16"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+                </CarouselView.EmptyView>
+            </CarouselView>
+
+            <!-- Loading overlay -->
+            <Grid IsVisible="{Binding IsLoading}"
+                  BackgroundColor="#CC000000">
+                <ActivityIndicator IsRunning="{Binding IsLoading}"
+                                   Color="#E94560"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center" />
+            </Grid>
+
+        </Grid>
+
+        <!-- Page indicator dots -->
+        <HorizontalStackLayout Grid.Row="2"
+                               HorizontalOptions="Center"
+                               Padding="0,8"
+                               BackgroundColor="#0D1117"
+                               BindableLayout.ItemsSource="{Binding CurrentPageDots}">
+            <BindableLayout.ItemTemplate>
+                <DataTemplate x:DataType="x:Boolean">
+                    <BoxView WidthRequest="6"
+                             HeightRequest="6"
+                             CornerRadius="3"
+                             Margin="3,0"
+                             Color="{Binding ., Converter={StaticResource DotColorConverter}}" />
+                </DataTemplate>
+            </BindableLayout.ItemTemplate>
+        </HorizontalStackLayout>
+
+    </Grid>
+
+</ContentPage>
