@@ -13,7 +13,7 @@
 		<ApplicationTitle>Kneeboard</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.tpaseka.kneeboard</ApplicationId>
+		<ApplicationId>com.companyname.kneeboard</ApplicationId>
 		<ApplicationIdGuid>66b6e3b3-f361-480f-aa07-c2eaae7ed48b</ApplicationIdGuid>
 
 		<!-- Versions -->
