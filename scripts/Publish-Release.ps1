@@ -15,16 +15,24 @@ $version = ($xml.Project.PropertyGroup | Where-Object { $_.ApplicationDisplayVer
 
 Write-Host "=== Kneeboard release build v$version ==="
 
-# Publish
+# Two-step publish: restore without RID first (workaround for MAUI Mono-restore bug),
+# then publish self-contained without re-restoring.
+Write-Host "Restoring packages..."
+dotnet restore "$root\Kneeboard" -p:TargetFramework=net10.0-windows10.0.19041.0
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 Write-Host "Running dotnet publish..."
 dotnet publish "$root\Kneeboard" `
     -f net10.0-windows10.0.19041.0 `
     -c Release `
-    -p:PublishProfile=WinRelease
+    -p:PublishProfile=WinRelease `
+    -p:SelfContained=true `
+    -p:WindowsAppSDKSelfContained=true `
+    --no-restore
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-# Locate the .msix (path includes version + arch, so search recursively)
-$searchRoot = Join-Path $root "Kneeboard\bin\Release\net10.0-windows10.0.19041.0"
+# MAUI Windows MSIX output lands in AppPackages/, not in bin/Release/
+$searchRoot = Join-Path $root "Kneeboard\AppPackages"
 $msix = Get-ChildItem $searchRoot -Recurse -Filter "*.msix" | Select-Object -First 1
 
 if (-not $msix) {
