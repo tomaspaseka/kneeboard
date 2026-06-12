@@ -480,3 +480,10 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Code signing — private key and local config stay off source control
+*.pfx
+Kneeboard/Signing.props
+
+# Release artifacts
+dist/
