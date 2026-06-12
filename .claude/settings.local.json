@@ -14,7 +14,13 @@
       "PowerShell(gh auth *)",
       "Bash(gh auth *)",
       "Bash(C:/Users/tpase/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/brainstorming/scripts/start-server.sh *)",
-      "Skill(update-config)"
+      "Skill(update-config)",
+      "Skill(run)",
+      "PowerShell(dotnet clean *)",
+      "PowerShell(Start-Process \"C:\\\\Users\\\\tpase\\\\src\\\\kneeboard\\\\Kneeboard\\\\bin\\\\Debug\\\\net10.0-windows10.0.19041.0\\\\win-x64\\\\Kneeboard.exe\")",
+      "PowerShell(cd \"C:\\\\Users\\\\tpase\\\\src\\\\kneeboard\\\\Kneeboard\\\\bin\\\\Debug\\\\net10.0-windows10.0.19041.0\\\\win-x64\" && .\\\\Kneeboard.exe 2>&1; echo \"Exit code: $LASTEXITCODE\")",
+      "PowerShell(\\(Get-Item \"C:\\\\Users\\\\tpase\\\\src\\\\kneeboard\\\\Kneeboard\\\\bin\\\\Debug\\\\net10.0-windows10.0.19041.0\\\\win-x64\\\\Microsoft.WindowsAppRuntime.Bootstrap.dll\"\\).VersionInfo | Select-Object FileVersion, ProductVersion)",
+      "PowerShell(dotnet test *)"
     ]
   }
 }
