@@ -79,31 +79,36 @@ public partial class KneeboardViewModel : BaseViewModel
         IsLoading = true;
         Title = doc.Title;
 
-        var sectionVMs = doc.Sections.Select(s => new SectionViewModel(s)).ToList();
-
-        foreach (var vm in sectionVMs)
+        try
         {
-            vm.Pages = vm.Section.Source switch
+            var sectionVMs = doc.Sections.Select(s => new SectionViewModel(s)).ToList();
+
+            foreach (var vm in sectionVMs)
             {
-                PdfSource pdf => await _pdfService.RenderAllPagesAsync(pdf.Path),
-                ImageFolderSource img => LoadImagesFromFolder(img.Folder),
-                _ => []
-            };
+                vm.Pages = vm.Section.Source switch
+                {
+                    PdfSource pdf => await _pdfService.RenderAllPagesAsync(pdf.Path),
+                    ImageFolderSource img => LoadImagesFromFolder(img.Folder),
+                    _ => []
+                };
+            }
+
+            Sections = sectionVMs;
+
+            // Set backing fields directly to avoid no-change guard on index 0 → 0
+            _selectedSectionIndex = 0;
+            _currentPageIndex = 0;
+            if (sectionVMs.Count > 0) sectionVMs[0].IsSelected = true;
+
+            OnPropertyChanged(nameof(SelectedSectionIndex));
+            OnPropertyChanged(nameof(CurrentPageIndex));
+            OnPropertyChanged(nameof(CurrentPages));
+            OnPropertyChanged(nameof(CurrentPageDots));
         }
-
-        Sections = sectionVMs;
-
-        // Set backing fields directly to avoid no-change guard on index 0 → 0
-        _selectedSectionIndex = 0;
-        _currentPageIndex = 0;
-        if (sectionVMs.Count > 0) sectionVMs[0].IsSelected = true;
-
-        OnPropertyChanged(nameof(SelectedSectionIndex));
-        OnPropertyChanged(nameof(CurrentPageIndex));
-        OnPropertyChanged(nameof(CurrentPages));
-        OnPropertyChanged(nameof(CurrentPageDots));
-
-        IsLoading = false;
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private static IReadOnlyList<string> LoadImagesFromFolder(string folder)
