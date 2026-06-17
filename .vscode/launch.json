@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Kneeboard (Windows)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build: Kneeboard",
+            "program": "${workspaceFolder}/Kneeboard/bin/Debug/net10.0-windows10.0.19041.0/win-x64/Kneeboard.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/Kneeboard",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        },
+        {
+            "name": "Kneeboard Tests",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build: Kneeboard.Tests",
+            "program": "${workspaceFolder}/Kneeboard.Tests/bin/Debug/net10.0-windows10.0.19041.0/testhost.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/Kneeboard.Tests",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        }
+    ]
+}
