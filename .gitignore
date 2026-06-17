@@ -193,6 +193,7 @@ publish/
 # Note: Comment the next line if you want to checkin your web deploy settings,
 # but database connection strings (with potential passwords) will be unencrypted
 *.pubxml
+!**/PublishProfiles/*.pubxml
 *.publishproj
 
 # Microsoft Azure Web App publish settings. Comment the next line if you want to
@@ -480,3 +481,10 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Code signing — private key and local config stay off source control
+*.pfx
+Kneeboard/Signing.props
+
+# Release artifacts
+dist/
