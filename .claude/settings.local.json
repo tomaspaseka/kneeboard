@@ -22,7 +22,9 @@
       "PowerShell(\\(Get-Item \"C:\\\\Users\\\\tpase\\\\src\\\\kneeboard\\\\Kneeboard\\\\bin\\\\Debug\\\\net10.0-windows10.0.19041.0\\\\win-x64\\\\Microsoft.WindowsAppRuntime.Bootstrap.dll\"\\).VersionInfo | Select-Object FileVersion, ProductVersion)",
       "PowerShell(dotnet test *)",
       "PowerShell(dotnet run *)",
-      "Bash(Remove-Item *)"
+      "Bash(Remove-Item *)",
+      "Bash(cd /tmp)",
+      "Bash(unzip -l \"C:\\\\Users\\\\tpase\\\\src\\\\kneeboard\\\\.claude\\\\worktrees\\\\feat+distribution\\\\dist\\\\Kneeboard-v1.0.zip\")"
     ]
   }
 }
