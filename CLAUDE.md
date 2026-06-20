@@ -29,6 +29,12 @@ dotnet run --project Kneeboard --framework net10.0-windows10.0.19041.0
 output into `dist\Kneeboard-v<version>.zip`. Extract the ZIP anywhere and run `Kneeboard.exe`
 directly — no installation required.
 
+## Branching
+
+Always create a new branch before making any changes. Never commit directly to `master`. Never merge or rebase the branch — leave that for the user.
+
+Name branches using the pattern `<type>/<short-description>`, e.g. `feat/pdf-viewer` or `fix/bootstrap-crash`.
+
 ## Commits
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). Format: `<type>(<scope>): <description>`. Common types: `feat`, `fix`, `refactor`, `test`, `chore`, `docs`.
