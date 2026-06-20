@@ -81,7 +81,7 @@ public partial class KneeboardViewModel : BaseViewModel
 
         try
         {
-            var sectionVMs = doc.Sections.Select(s => new SectionViewModel(s)).ToList();
+            var sectionVMs = doc.Sections.Select(s => new SectionViewModel(s) { SelectCommand = SelectSectionCommand }).ToList();
 
             foreach (var vm in sectionVMs)
             {

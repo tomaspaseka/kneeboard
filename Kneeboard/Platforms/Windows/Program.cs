@@ -4,18 +4,20 @@ namespace Kneeboard.WinUI;
 
 public static class Program
 {
-    // Bootstrap must be called before Application.Start() so WinRT COM classes
-    // (Microsoft.UI.Xaml.*) can be activated. The auto-generated module initializer
-    // is disabled (DISABLE_XAML_GENERATED_MAIN + WindowsAppSdkDeploymentManagerInitialize=false)
-    // to prevent it from firing when Kneeboard.dll is loaded by the test runner.
     [DllImport("Microsoft.WindowsAppRuntime.Bootstrap.dll")]
     private static extern int MddBootstrapInitialize(uint majorMinorVersion, string? versionTag, ulong minVersion);
 
+    // The auto-generated module initializer is disabled (DISABLE_XAML_GENERATED_MAIN +
+    // WindowsAppSdkDeploymentManagerInitialize=false) to prevent it from firing when
+    // Kneeboard.dll is loaded by the test runner.
     [System.STAThread]
     static void Main(string[] args)
     {
-        int hr = MddBootstrapInitialize(0x00010008, null, 0); // WinAppSDK 1.8
-        Marshal.ThrowExceptionForHR(hr);
+        // Unpackaged (debug) runs need WinAppSDK bootstrapped explicitly. Packaged MSIX
+        // resolves WinAppSDK via the framework package in the manifest — calling Bootstrap
+        // there loads the wrong DLL and FailFasts.
+        if (!IsRunningPackaged())
+            Marshal.ThrowExceptionForHR(MddBootstrapInitialize(0x00010008, null, 0));
 
         WinRT.ComWrappersSupport.InitializeComWrappers();
         Microsoft.UI.Xaml.Application.Start(p =>
@@ -25,5 +27,11 @@ public static class Program
             System.Threading.SynchronizationContext.SetSynchronizationContext(context);
             new App();
         });
+    }
+
+    static bool IsRunningPackaged()
+    {
+        try { _ = Windows.ApplicationModel.Package.Current; return true; }
+        catch { return false; }
     }
 }

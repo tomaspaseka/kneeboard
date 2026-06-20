@@ -27,7 +27,7 @@ dotnet publish "$root\Kneeboard" `
     -c Release `
     -p:PublishProfile=WinRelease `
     -p:SelfContained=true `
-    -p:WindowsAppSDKSelfContained=true `
+    -p:WindowsAppSDKSelfContained=false `
     --no-restore
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
@@ -49,6 +49,7 @@ New-Item -ItemType Directory $stage | Out-Null
 Copy-Item $msix.FullName              "$stage\Kneeboard.msix"
 Copy-Item "$root\Kneeboard.cer"       "$stage\Kneeboard.cer"
 Copy-Item "$root\scripts\Install.ps1" "$stage\Install.ps1"
+Copy-Item "$root\scripts\Install.cmd" "$stage\Install.cmd"
 
 # Zip
 $distDir = Join-Path $root "dist"

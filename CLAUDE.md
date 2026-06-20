@@ -19,9 +19,15 @@ dotnet test --filter "FullyQualifiedName~DocumentServiceTests.LoadAsync_WhenFile
 dotnet run --project Kneeboard --framework net10.0-windows10.0.19041.0
 ```
 
-## Workflow
+## Building the installer
 
-Before starting any implementation task, invoke the `superpowers:using-git-worktrees` skill to create an isolated branch. Do not merge or push after finishing — commit the work and stop.
+```powershell
+.\scripts\Publish-Release.ps1
+```
+
+`Publish-Release.ps1` cleans, restores, and builds a self-contained x64 exe, then zips the
+output into `dist\Kneeboard-v<version>.zip`. Extract the ZIP anywhere and run `Kneeboard.exe`
+directly — no installation required.
 
 ## Commits
 

@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Kneeboard.Models;
 
@@ -11,6 +12,8 @@ public partial class SectionViewModel : BaseViewModel
     public partial bool IsSelected { get; set; }
 
     public IReadOnlyList<string> Pages { get; set; } = [];
+
+    public ICommand? SelectCommand { get; init; }
 
     public SectionViewModel(KneeboardSection section)
     {

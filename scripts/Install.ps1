@@ -38,6 +38,20 @@ if ($already.Count -eq 0) {
 }
 $store.Close()
 
+# Ensure WinAppRuntime 1.8 is present (required by the MSIX; not bundled in the package)
+Write-Host "Checking Windows App Runtime..."
+$winrt = Get-AppxPackage -Name "Microsoft.WindowsAppRuntime.1.8" -ErrorAction SilentlyContinue
+if (-not $winrt) {
+    Write-Host "Installing Windows App Runtime 1.8..."
+    winget install --id Microsoft.WindowsAppRuntime.1.8 --silent --accept-package-agreements --accept-source-agreements
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to install Windows App Runtime 1.8. Install it manually from https://aka.ms/windowsappsdk and re-run this script."
+        exit 1
+    }
+} else {
+    Write-Host "Windows App Runtime already installed ($($winrt.Version))."
+}
+
 # Install or upgrade
 Write-Host "Installing Kneeboard..."
 Add-AppxPackage -Path $msixPath -ForceApplicationShutdown

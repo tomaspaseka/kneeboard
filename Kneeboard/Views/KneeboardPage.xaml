@@ -36,7 +36,7 @@
                                 CharacterSpacing="0.5"
                                 Padding="20,10"
                                 BorderWidth="0"
-                                Command="{Binding Source={x:Reference Self}, Path=BindingContext.SelectSectionCommand}"
+                                Command="{Binding SelectCommand}"
                                 CommandParameter="{Binding .}">
                             <Button.Triggers>
                                 <DataTrigger TargetType="Button"
@@ -77,7 +77,7 @@
                           Loop="False"
                           HorizontalScrollBarVisibility="Never">
                 <CarouselView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="x:String">
                         <Image Source="{Binding .}"
                                Aspect="AspectFit"
                                HorizontalOptions="Fill"
