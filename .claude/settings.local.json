@@ -25,7 +25,12 @@
       "Bash(Remove-Item *)",
       "Bash(cd /tmp)",
       "Bash(unzip -l \"C:\\\\Users\\\\tpase\\\\src\\\\kneeboard\\\\.claude\\\\worktrees\\\\feat+distribution\\\\dist\\\\Kneeboard-v1.0.zip\")",
-      "Bash(grep -E \"\\\\.\\(xml|props|txt\\)$\")"
+      "Bash(grep -E \"\\\\.\\(xml|props|txt\\)$\")",
+      "Bash(git reset *)",
+      "Bash(git checkout *)",
+      "Bash(git pull *)",
+      "Bash(git merge *)",
+      "Bash(git branch *)"
     ]
   }
 }

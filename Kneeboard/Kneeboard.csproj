@@ -13,9 +13,11 @@
     <!-- App Identifier -->
     <ApplicationId>com.tpaseka.kneeboard</ApplicationId>
     <ApplicationIdGuid>66b6e3b3-f361-480f-aa07-c2eaae7ed48b</ApplicationIdGuid>
-    <!-- Versions -->
-    <ApplicationDisplayVersion>1.3</ApplicationDisplayVersion>
-    <ApplicationVersion>4</ApplicationVersion>
+    <!-- Versions: MAJOR.MINOR.REVISION — Publish-Release.ps1 auto-bumps REVISION each release.
+		     Bump MAJOR or MINOR manually in this file when warranted; reset REVISION to 0.
+		     ApplicationVersion must equal the REVISION number (4th MSIX Identity component). -->
+    <ApplicationDisplayVersion>1.4.3</ApplicationDisplayVersion>
+    <ApplicationVersion>3</ApplicationVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
     <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
