@@ -31,9 +31,11 @@ directly — no installation required.
 
 ## Branching
 
-Always create a new branch before making any changes. Never commit directly to `master`. Never merge or rebase the branch — leave that for the user.
-
-Name branches using the pattern `<type>/<short-description>`, e.g. `feat/pdf-viewer` or `fix/bootstrap-crash`.
+* Always create a new branch before making any changes. Never commit directly to `master`. Never merge or rebase the branch — leave that for the user.
+* Name branches using the pattern `<type>/<short-description>`, e.g. `feat/pdf-viewer` or `fix/bootstrap-crash`.
+* Always squash commits in a branch into a single commit before merging to `master`. Use `git rebase -i` to squash commits and create a new meaningful commit message.
+  * ALWAYS ASK for confirmation of commit message.
+  * The commit message should follow the Conventional Commits format.
 
 ## Commits
 

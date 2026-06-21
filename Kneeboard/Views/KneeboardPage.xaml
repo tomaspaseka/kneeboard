@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:vm="clr-namespace:Kneeboard.ViewModels"
+             xmlns:controls="clr-namespace:Kneeboard.Controls"
              x:Class="Kneeboard.Views.KneeboardPage"
              x:DataType="vm:KneeboardViewModel"
              x:Name="Self"
@@ -72,26 +73,20 @@
         <!-- Content area -->
         <Grid Grid.Row="1">
 
-            <CarouselView ItemsSource="{Binding CurrentPages}"
-                          Position="{Binding CurrentPageIndex, Mode=TwoWay}"
-                          Loop="False"
-                          HorizontalScrollBarVisibility="Never">
-                <CarouselView.ItemTemplate>
-                    <DataTemplate x:DataType="x:String">
-                        <Image Source="{Binding .}"
-                               Aspect="AspectFit"
-                               HorizontalOptions="Fill"
-                               VerticalOptions="Fill" />
-                    </DataTemplate>
-                </CarouselView.ItemTemplate>
-                <CarouselView.EmptyView>
-                    <Label Text="No pages"
-                           TextColor="#6B7280"
-                           FontSize="16"
-                           HorizontalOptions="Center"
-                           VerticalOptions="Center" />
-                </CarouselView.EmptyView>
-            </CarouselView>
+            <controls:ZoomablePageView
+                Source="{Binding CurrentPage}"
+                NavigateNextCommand="{Binding NavigateNextCommand}"
+                NavigatePreviousCommand="{Binding NavigatePreviousCommand}"
+                HorizontalOptions="Fill"
+                VerticalOptions="Fill" />
+
+            <!-- Empty state -->
+            <Label Text="No pages"
+                   TextColor="#6B7280"
+                   FontSize="16"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"
+                   IsVisible="{Binding IsEmpty}" />
 
             <!-- Loading overlay -->
             <Grid IsVisible="{Binding IsLoading}"
