@@ -24,8 +24,6 @@ public partial class KneeboardViewModel : BaseViewModel
             {
                 OnPropertyChanged(nameof(CurrentPages));
                 OnPropertyChanged(nameof(CurrentPageDots));
-                OnPropertyChanged(nameof(CurrentPage));
-                OnPropertyChanged(nameof(IsEmpty));
                 OnSelectedSectionIndexChanged(value);
             }
         }
@@ -38,18 +36,9 @@ public partial class KneeboardViewModel : BaseViewModel
         set
         {
             if (SetProperty(ref _currentPageIndex, value))
-            {
                 OnPropertyChanged(nameof(CurrentPageDots));
-                OnPropertyChanged(nameof(CurrentPage));
-                OnPropertyChanged(nameof(IsEmpty));
-            }
         }
     }
-
-    public string CurrentPage =>
-        CurrentPages.ElementAtOrDefault(CurrentPageIndex) ?? string.Empty;
-
-    public bool IsEmpty => !CurrentPages.Any();
 
     [ObservableProperty]
     public partial List<SectionViewModel> Sections { get; set; }
@@ -115,8 +104,6 @@ public partial class KneeboardViewModel : BaseViewModel
             OnPropertyChanged(nameof(CurrentPageIndex));
             OnPropertyChanged(nameof(CurrentPages));
             OnPropertyChanged(nameof(CurrentPageDots));
-            OnPropertyChanged(nameof(CurrentPage));
-            OnPropertyChanged(nameof(IsEmpty));
         }
         finally
         {
@@ -146,19 +133,5 @@ public partial class KneeboardViewModel : BaseViewModel
         var result = await _documentService.PickAndLoadAsync();
         if (result.Success)
             Document = result.Document;
-    }
-
-    [RelayCommand]
-    private void NavigateNext()
-    {
-        if (CurrentPageIndex < CurrentPages.Count - 1)
-            CurrentPageIndex++;
-    }
-
-    [RelayCommand]
-    private void NavigatePrevious()
-    {
-        if (CurrentPageIndex > 0)
-            CurrentPageIndex--;
     }
 }
