@@ -9,12 +9,6 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 
-# Auto-bump the revision before building so every published package is strictly
-# newer than the previous one and Add-AppxPackage upgrades rather than rejecting.
-Write-Host "Bumping release revision..."
-& "$root\scripts\Bump-Version.ps1"
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
 # Read the bumped version from csproj
 $csproj     = Join-Path $root "Kneeboard\Kneeboard.csproj"
 $xml        = [xml](Get-Content $csproj)

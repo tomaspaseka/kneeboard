@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    Bumps the REVISION component of the MAJOR.MINOR.REVISION version scheme.
-    Called automatically by Publish-Release.ps1 before each release build.
-    Invoke manually only when you need to test a version bump without publishing.
+    Bumps the MINOR component of the MAJOR.MINOR.REVISION version scheme.
+    REVISION is reset to 0 (e.g. 1.1.5 -> 1.2.0).
+    Invoke manually when starting a new minor release cycle.
 .EXAMPLE
-    .\scripts\Bump-Version.ps1
+    .\scripts\Bump-Minor.ps1
 #>
 
 $ErrorActionPreference = 'Stop'
@@ -25,15 +25,14 @@ $major    = [int]$parts[0]
 $minor    = [int]$parts[1]
 $revision = if ($parts.Count -ge 3) { [int]$parts[2] } else { 0 }
 
-$newRevision       = $revision + 1
-$newDisplayVersion = "$major.$minor.$newRevision"
-$newAppVersion     = "$newRevision"
+$newMinor          = $minor + 1
+$newDisplayVersion = "$major.$newMinor.0"
 
 $pg.ApplicationDisplayVersion = $newDisplayVersion
-$pg.ApplicationVersion        = $newAppVersion
+$pg.ApplicationVersion        = "0"
 
 $xml.Save($csproj)
 
 Write-Host "Version bumped:"
 Write-Host "  ApplicationDisplayVersion  $displayVersion  ->  $newDisplayVersion"
-Write-Host "  ApplicationVersion         $revision  ->  $newRevision"
+Write-Host "  ApplicationVersion         $revision  ->  0"

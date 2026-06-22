@@ -15,6 +15,8 @@ public partial class WelcomeViewModel : BaseViewModel
 
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
+    public string AppVersion => $"v{AppInfo.Current.VersionString}";
+
     public WelcomeViewModel(IDocumentService documentService, INavigationService navigation)
     {
         _documentService = documentService;
