@@ -59,7 +59,9 @@ public partial class KneeboardViewModel : BaseViewModel
         CurrentPages.Select((_, i) => i == CurrentPageIndex).ToList();
 
     public string CurrentPageImagePath =>
-        CurrentPages.Count > 0 ? CurrentPages[CurrentPageIndex] : string.Empty;
+        CurrentPages.Count > 0 && CurrentPageIndex < CurrentPages.Count
+            ? CurrentPages[CurrentPageIndex]
+            : string.Empty;
 
     public KneeboardViewModel(IDocumentService documentService, IPdfService pdfService)
     {

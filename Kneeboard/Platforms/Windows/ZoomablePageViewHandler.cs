@@ -72,7 +72,12 @@ public class ZoomablePageViewHandler : ViewHandler<ZoomablePageView, ScrollViewe
     private void OnTapped(object sender, TappedRoutedEventArgs e)
     {
         _pendingTapPos = e.GetPosition(PlatformView);
-        _tapTimer?.Stop();
+        if (_tapTimer is not null)
+        {
+            _tapTimer.Stop();
+            _tapTimer.Tick -= OnTapTimerTick;
+            _tapTimer = null;
+        }
         _tapTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
         _tapTimer.Tick += OnTapTimerTick;
         _tapTimer.Start();
