@@ -95,6 +95,110 @@ public class KneeboardViewModelTests : IDisposable
         Assert.False(vm.CurrentPageDots[2]);
     }
 
+    [Fact]
+    public void CurrentPageImagePath_ReturnsPathAtCurrentIndex()
+    {
+        var folder = CreateTempFolder();
+        File.WriteAllText(Path.Combine(folder, "p1.png"), "");
+        File.WriteAllText(Path.Combine(folder, "p2.png"), "");
+        var doc = new KneeboardDocument
+        {
+            Title = "T",
+            Sections = [new() { Id = "x", Label = "X", Source = new ImageFolderSource { Folder = folder } }]
+        };
+        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
+        vm.Document = doc;
+
+        vm.CurrentPageIndex = 1;
+
+        Assert.EndsWith("p2.png", vm.CurrentPageImagePath);
+    }
+
+    [Fact]
+    public void CurrentPageImagePath_EmptyWhenNoPages()
+    {
+        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
+
+        Assert.Equal(string.Empty, vm.CurrentPageImagePath);
+    }
+
+    [Fact]
+    public void NextPageCommand_AdvancesIndex()
+    {
+        var folder = CreateTempFolder();
+        File.WriteAllText(Path.Combine(folder, "p1.png"), "");
+        File.WriteAllText(Path.Combine(folder, "p2.png"), "");
+        var doc = new KneeboardDocument
+        {
+            Title = "T",
+            Sections = [new() { Id = "x", Label = "X", Source = new ImageFolderSource { Folder = folder } }]
+        };
+        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
+        vm.Document = doc;
+
+        vm.NextPageCommand.Execute(null);
+
+        Assert.Equal(1, vm.CurrentPageIndex);
+    }
+
+    [Fact]
+    public void NextPageCommand_ClampsAtLastPage()
+    {
+        var folder = CreateTempFolder();
+        File.WriteAllText(Path.Combine(folder, "p1.png"), "");
+        File.WriteAllText(Path.Combine(folder, "p2.png"), "");
+        var doc = new KneeboardDocument
+        {
+            Title = "T",
+            Sections = [new() { Id = "x", Label = "X", Source = new ImageFolderSource { Folder = folder } }]
+        };
+        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
+        vm.Document = doc;
+        vm.CurrentPageIndex = 1;
+
+        vm.NextPageCommand.Execute(null);
+
+        Assert.Equal(1, vm.CurrentPageIndex);
+    }
+
+    [Fact]
+    public void PreviousPageCommand_DecrementsIndex()
+    {
+        var folder = CreateTempFolder();
+        File.WriteAllText(Path.Combine(folder, "p1.png"), "");
+        File.WriteAllText(Path.Combine(folder, "p2.png"), "");
+        var doc = new KneeboardDocument
+        {
+            Title = "T",
+            Sections = [new() { Id = "x", Label = "X", Source = new ImageFolderSource { Folder = folder } }]
+        };
+        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
+        vm.Document = doc;
+        vm.CurrentPageIndex = 1;
+
+        vm.PreviousPageCommand.Execute(null);
+
+        Assert.Equal(0, vm.CurrentPageIndex);
+    }
+
+    [Fact]
+    public void PreviousPageCommand_ClampsAtZero()
+    {
+        var folder = CreateTempFolder();
+        File.WriteAllText(Path.Combine(folder, "p1.png"), "");
+        var doc = new KneeboardDocument
+        {
+            Title = "T",
+            Sections = [new() { Id = "x", Label = "X", Source = new ImageFolderSource { Folder = folder } }]
+        };
+        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
+        vm.Document = doc;
+
+        vm.PreviousPageCommand.Execute(null);
+
+        Assert.Equal(0, vm.CurrentPageIndex);
+    }
+
     // ── helpers ────────────────────────────────────────────────────────────────
 
     private KneeboardDocument TwoSectionDoc() => new()

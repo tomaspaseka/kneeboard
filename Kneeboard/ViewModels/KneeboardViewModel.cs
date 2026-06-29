@@ -24,6 +24,7 @@ public partial class KneeboardViewModel : BaseViewModel
             {
                 OnPropertyChanged(nameof(CurrentPages));
                 OnPropertyChanged(nameof(CurrentPageDots));
+                OnPropertyChanged(nameof(CurrentPageImagePath));
                 OnSelectedSectionIndexChanged(value);
             }
         }
@@ -36,7 +37,10 @@ public partial class KneeboardViewModel : BaseViewModel
         set
         {
             if (SetProperty(ref _currentPageIndex, value))
+            {
                 OnPropertyChanged(nameof(CurrentPageDots));
+                OnPropertyChanged(nameof(CurrentPageImagePath));
+            }
         }
     }
 
@@ -53,6 +57,9 @@ public partial class KneeboardViewModel : BaseViewModel
 
     public IReadOnlyList<bool> CurrentPageDots =>
         CurrentPages.Select((_, i) => i == CurrentPageIndex).ToList();
+
+    public string CurrentPageImagePath =>
+        CurrentPages.Count > 0 ? CurrentPages[CurrentPageIndex] : string.Empty;
 
     public KneeboardViewModel(IDocumentService documentService, IPdfService pdfService)
     {
@@ -104,6 +111,7 @@ public partial class KneeboardViewModel : BaseViewModel
             OnPropertyChanged(nameof(CurrentPageIndex));
             OnPropertyChanged(nameof(CurrentPages));
             OnPropertyChanged(nameof(CurrentPageDots));
+            OnPropertyChanged(nameof(CurrentPageImagePath));
         }
         finally
         {
@@ -134,4 +142,10 @@ public partial class KneeboardViewModel : BaseViewModel
         if (result.Success)
             Document = result.Document;
     }
+
+    [RelayCommand]
+    private void PreviousPage() => CurrentPageIndex = Math.Max(0, CurrentPageIndex - 1);
+
+    [RelayCommand]
+    private void NextPage() => CurrentPageIndex = Math.Min(CurrentPages.Count - 1, CurrentPageIndex + 1);
 }
