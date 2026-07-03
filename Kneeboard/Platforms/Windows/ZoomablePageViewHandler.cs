@@ -63,10 +63,9 @@ public class ZoomablePageViewHandler : ViewHandler<ZoomablePageView, ScrollViewe
 
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        var sv = PlatformView;
-        _image.Width = sv.ViewportWidth;
-        _image.Height = sv.ViewportHeight;
-        sv.ChangeView(0, 0, 1.0f, disableAnimation: true);
+        _image.Width = e.NewSize.Width;
+        _image.Height = e.NewSize.Height;
+        PlatformView.ChangeView(0, 0, 1.0f, disableAnimation: true);
     }
 
     private void OnTapped(object sender, TappedRoutedEventArgs e)
@@ -99,7 +98,7 @@ public class ZoomablePageViewHandler : ViewHandler<ZoomablePageView, ScrollViewe
     {
         _tapTimer?.Stop();
         _tapTimer = null;
-        PlatformView.ChangeView(0, 0, 1.0f, disableAnimation: false);
+        PlatformView.ChangeView(0, 0, 1.0f, disableAnimation: true);
     }
 
     private static void MapImageSource(ZoomablePageViewHandler handler, ZoomablePageView view)
