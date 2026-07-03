@@ -13,6 +13,8 @@ public partial class SectionViewModel : BaseViewModel
 
     public IReadOnlyList<string> Pages { get; set; } = [];
 
+    public int LastPageIndex { get; set; }
+
     public ICommand? SelectCommand { get; init; }
 
     public SectionViewModel(KneeboardSection section)

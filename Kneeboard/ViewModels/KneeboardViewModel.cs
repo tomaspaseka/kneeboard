@@ -20,12 +20,14 @@ public partial class KneeboardViewModel : BaseViewModel
         get => _selectedSectionIndex;
         set
         {
+            var previousIndex = _selectedSectionIndex;
             if (SetProperty(ref _selectedSectionIndex, value))
             {
+                OnSelectedSectionIndexChanged(previousIndex, value);
+                OnPropertyChanged(nameof(CurrentPageIndex));
                 OnPropertyChanged(nameof(CurrentPages));
                 OnPropertyChanged(nameof(CurrentPageDots));
                 OnPropertyChanged(nameof(CurrentPageImagePath));
-                OnSelectedSectionIndexChanged(value);
             }
         }
     }
@@ -76,11 +78,19 @@ public partial class KneeboardViewModel : BaseViewModel
             _ = LoadDocumentAsync(value);
     }
 
-    private void OnSelectedSectionIndexChanged(int value)
+    private void OnSelectedSectionIndexChanged(int previousIndex, int value)
     {
+        if (previousIndex >= 0 && previousIndex < Sections.Count)
+            Sections[previousIndex].LastPageIndex = _currentPageIndex;
+
         for (var i = 0; i < Sections.Count; i++)
             Sections[i].IsSelected = i == value;
-        CurrentPageIndex = 0;
+
+        // Set the backing field directly so the CurrentPages/CurrentPageDots/CurrentPageImagePath
+        // notifications raised by the caller are the only ones published, and they already reflect
+        // the restored page of the new section — otherwise a stale-index/new-section combination is
+        // briefly published first, which the native image view picks up as a real (if transient) wrong page.
+        _currentPageIndex = value >= 0 && value < Sections.Count ? Sections[value].LastPageIndex : 0;
     }
 
     private async Task LoadDocumentAsync(KneeboardDocument doc)
