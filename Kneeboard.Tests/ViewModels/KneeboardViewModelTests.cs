@@ -56,7 +56,7 @@ public class KneeboardViewModelTests : IDisposable
     }
 
     [Fact]
-    public void SelectSection_ResetsPageIndexToZero()
+    public void SelectSection_UnvisitedSection_StartsAtPageZero()
     {
         var doc = TwoSectionDoc();
         var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
@@ -66,6 +66,57 @@ public class KneeboardViewModelTests : IDisposable
         vm.SelectSectionCommand.Execute(vm.Sections[1]);
 
         Assert.Equal(0, vm.CurrentPageIndex);
+    }
+
+    [Fact]
+    public void SelectSection_RevisitedSection_RestoresLastViewedPage()
+    {
+        var doc = TwoSectionDoc();
+        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
+        vm.Document = doc;
+
+        vm.SelectSectionCommand.Execute(vm.Sections[1]);
+        vm.CurrentPageIndex = 2;
+
+        vm.SelectSectionCommand.Execute(vm.Sections[0]);
+        vm.SelectSectionCommand.Execute(vm.Sections[1]);
+
+        Assert.Equal(2, vm.CurrentPageIndex);
+    }
+
+    [Fact]
+    public void SelectSection_NeverPublishesImagePathFromStalePageIndex()
+    {
+        var folderA = CreateTempFolder();
+        File.WriteAllText(Path.Combine(folderA, "a1.png"), "");
+        File.WriteAllText(Path.Combine(folderA, "a2.png"), "");
+        var folderB = CreateTempFolder();
+        File.WriteAllText(Path.Combine(folderB, "b1.png"), "");
+        File.WriteAllText(Path.Combine(folderB, "b2.png"), "");
+
+        var doc = new KneeboardDocument
+        {
+            Title = "T",
+            Sections =
+            [
+                new() { Id = "a", Label = "A", Source = new ImageFolderSource { Folder = folderA } },
+                new() { Id = "b", Label = "B", Source = new ImageFolderSource { Folder = folderB } }
+            ]
+        };
+        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
+        vm.Document = doc;
+        vm.NextPageCommand.Execute(null); // section A, page index 1
+
+        var publishedImagePaths = new List<string>();
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(KneeboardViewModel.CurrentPageImagePath))
+                publishedImagePaths.Add(vm.CurrentPageImagePath);
+        };
+
+        vm.SelectSectionCommand.Execute(vm.Sections[1]); // switch to section B
+
+        Assert.All(publishedImagePaths, path => Assert.EndsWith("b1.png", path));
     }
 
     [Fact]

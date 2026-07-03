@@ -102,7 +102,7 @@ The main viewer. Layout:
 - **Page indicator (bottom):** a row of dots showing current position within the active section. Always visible.
 - **Loading overlay:** covers the `CarouselView` while `PdfService` renders pages. Dismissed when all sections are ready.
 
-Tab switching sets `SelectedSectionIndex`, swaps `CarouselView.ItemsSource`, and resets to page 0.
+Tab switching sets `SelectedSectionIndex`, swaps `CarouselView.ItemsSource`, and restores that section's last-viewed page (page 0 the first time it's visited).
 
 The 📂 icon triggers the same `DocumentService.PickAndLoadAsync()` flow. The current document remains visible until the new one is fully loaded; then it is replaced in place. If the user cancels the picker or loading fails, the current document stays open.
 
