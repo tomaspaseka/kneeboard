@@ -15,6 +15,13 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseMauiCommunityToolkit()
+            .ConfigureMauiHandlers(handlers =>
+            {
+#if WINDOWS
+                handlers.AddHandler<Kneeboard.Controls.ZoomablePageView,
+                                    Kneeboard.Platforms.Windows.ZoomablePageViewHandler>();
+#endif
+            })
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

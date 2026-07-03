@@ -74,19 +74,11 @@
         <Grid Grid.Row="1">
 
             <controls:ZoomablePageView
-                Source="{Binding CurrentPage}"
-                NavigateNextCommand="{Binding NavigateNextCommand}"
-                NavigatePreviousCommand="{Binding NavigatePreviousCommand}"
+                ImageSource="{Binding CurrentPageImagePath}"
+                PreviousPageCommand="{Binding PreviousPageCommand}"
+                NextPageCommand="{Binding NextPageCommand}"
                 HorizontalOptions="Fill"
                 VerticalOptions="Fill" />
-
-            <!-- Empty state -->
-            <Label Text="No pages"
-                   TextColor="#6B7280"
-                   FontSize="16"
-                   HorizontalOptions="Center"
-                   VerticalOptions="Center"
-                   IsVisible="{Binding IsEmpty}" />
 
             <!-- Loading overlay -->
             <Grid IsVisible="{Binding IsLoading}"

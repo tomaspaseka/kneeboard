@@ -24,8 +24,7 @@ public partial class KneeboardViewModel : BaseViewModel
             {
                 OnPropertyChanged(nameof(CurrentPages));
                 OnPropertyChanged(nameof(CurrentPageDots));
-                OnPropertyChanged(nameof(CurrentPage));
-                OnPropertyChanged(nameof(IsEmpty));
+                OnPropertyChanged(nameof(CurrentPageImagePath));
                 OnSelectedSectionIndexChanged(value);
             }
         }
@@ -40,16 +39,10 @@ public partial class KneeboardViewModel : BaseViewModel
             if (SetProperty(ref _currentPageIndex, value))
             {
                 OnPropertyChanged(nameof(CurrentPageDots));
-                OnPropertyChanged(nameof(CurrentPage));
-                OnPropertyChanged(nameof(IsEmpty));
+                OnPropertyChanged(nameof(CurrentPageImagePath));
             }
         }
     }
-
-    public string CurrentPage =>
-        CurrentPages.ElementAtOrDefault(CurrentPageIndex) ?? string.Empty;
-
-    public bool IsEmpty => !CurrentPages.Any();
 
     [ObservableProperty]
     public partial List<SectionViewModel> Sections { get; set; }
@@ -64,6 +57,11 @@ public partial class KneeboardViewModel : BaseViewModel
 
     public IReadOnlyList<bool> CurrentPageDots =>
         CurrentPages.Select((_, i) => i == CurrentPageIndex).ToList();
+
+    public string CurrentPageImagePath =>
+        CurrentPages.Count > 0 && CurrentPageIndex < CurrentPages.Count
+            ? CurrentPages[CurrentPageIndex]
+            : string.Empty;
 
     public KneeboardViewModel(IDocumentService documentService, IPdfService pdfService)
     {
@@ -115,8 +113,7 @@ public partial class KneeboardViewModel : BaseViewModel
             OnPropertyChanged(nameof(CurrentPageIndex));
             OnPropertyChanged(nameof(CurrentPages));
             OnPropertyChanged(nameof(CurrentPageDots));
-            OnPropertyChanged(nameof(CurrentPage));
-            OnPropertyChanged(nameof(IsEmpty));
+            OnPropertyChanged(nameof(CurrentPageImagePath));
         }
         finally
         {
@@ -149,16 +146,8 @@ public partial class KneeboardViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private void NavigateNext()
-    {
-        if (CurrentPageIndex < CurrentPages.Count - 1)
-            CurrentPageIndex++;
-    }
+    private void PreviousPage() => CurrentPageIndex = Math.Max(0, CurrentPageIndex - 1);
 
     [RelayCommand]
-    private void NavigatePrevious()
-    {
-        if (CurrentPageIndex > 0)
-            CurrentPageIndex--;
-    }
+    private void NextPage() => CurrentPageIndex = Math.Min(CurrentPages.Count - 1, CurrentPageIndex + 1);
 }
