@@ -1,7 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="Signing.props" Condition="Exists('$(MSBuildProjectDirectory)\Signing.props')" />
+  <!-- Optional machine-local build overrides (gitignored). Set <IncludeAndroid>false</IncludeAndroid>
+       here to build Windows-only on a machine that doesn't have the .NET Android workload installed. -->
+  <Import Project="Build.local.props" Condition="Exists('$(MSBuildProjectDirectory)\Build.local.props')" />
   <PropertyGroup>
-    <TargetFrameworks>net10.0-android;net10.0-windows10.0.19041.0</TargetFrameworks>
+    <!-- Android is included by default so CI and Android-equipped machines are unaffected.
+         Set IncludeAndroid=false (e.g. in Build.local.props) to drop the Android target where
+         the Android workload isn't installed. -->
+    <TargetFrameworks>net10.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(IncludeAndroid)' != 'false'">net10.0-android;$(TargetFrameworks)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <RootNamespace>Kneeboard</RootNamespace>
     <UseMaui>true</UseMaui>

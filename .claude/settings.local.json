@@ -30,7 +30,13 @@
       "Bash(git checkout *)",
       "Bash(git pull *)",
       "Bash(git merge *)",
-      "Bash(git branch *)"
+      "Bash(git branch *)",
+      "PowerShell(echo \"=== dotnet path ===\"; \\(Get-Command dotnet\\).Source; echo \"=== SDK folders present ===\"; Get-ChildItem \"C:\\\\Program Files\\\\dotnet\\\\sdk\" -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name; echo \"=== dotnet.dll in 8.0.100? ===\"; Test-Path \"C:\\\\Program Files\\\\dotnet\\\\sdk\\\\8.0.100\\\\dotnet.dll\"; echo \"=== workloads ===\"; try { dotnet workload list } catch { \"workload list failed: $_\" })",
+      "PowerShell(winget *)",
+      "PowerShell(dotnet msbuild *)",
+      "PowerShell(git check-ignore *)",
+      "Bash(git check-ignore *)",
+      "Bash(code --list-extensions)"
     ]
   }
 }

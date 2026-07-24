@@ -1,4 +1,0 @@
-<Solution>
-  <Project Path="Kneeboard.Tests/Kneeboard.Tests.csproj" />
-  <Project Path="Kneeboard/Kneeboard.csproj" />
-</Solution>
