@@ -486,5 +486,8 @@ $RECYCLE.BIN/
 *.pfx
 Kneeboard/Signing.props
 
+# Machine-local build overrides (e.g. IncludeAndroid=false on machines without the Android workload)
+Kneeboard/Build.local.props
+
 # Release artifacts
 dist/
