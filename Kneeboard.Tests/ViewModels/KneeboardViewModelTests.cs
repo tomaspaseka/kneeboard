@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Text;
 using Kneeboard.Models;
 using Kneeboard.Services;
@@ -14,9 +15,8 @@ public class KneeboardViewModelTests
         var vm = Load(("A", ["a1"]), ("B", ["b1"]));
 
         Assert.Equal(2, vm.Sections.Count);
-        Assert.Equal(0, vm.SelectedSectionIndex);
-        Assert.True(vm.Sections[0].IsSelected);
-        Assert.False(vm.Sections[1].IsSelected);
+        Assert.Equal([true, false], SelectedTabs(vm));
+        Assert.Equal("a1", CurrentPage(vm));
         Assert.False(vm.IsLoading);
     }
 
@@ -29,26 +29,25 @@ public class KneeboardViewModelTests
     }
 
     [Fact]
-    public void SelectSection_UpdatesSelectedIndexAndIsSelected()
+    public void SelectSection_HighlightsThatTabAndShowsItsPage()
     {
         var vm = Load(("A", ["a1"]), ("B", ["b1"]));
 
         vm.SelectSectionCommand.Execute(vm.Sections[1]);
 
-        Assert.Equal(1, vm.SelectedSectionIndex);
-        Assert.False(vm.Sections[0].IsSelected);
-        Assert.True(vm.Sections[1].IsSelected);
+        Assert.Equal([false, true], SelectedTabs(vm));
+        Assert.Equal("b1", CurrentPage(vm));
     }
 
     [Fact]
-    public void SelectSection_UnvisitedSection_StartsAtPageZero()
+    public void SelectSection_UnvisitedSection_StartsAtItsFirstPage()
     {
         var vm = Load(("A", ["a1", "a2", "a3", "a4"]), ("B", ["b1", "b2"]));
-        vm.CurrentPageIndex = 3;
+        TurnForward(vm, 3); // fourth page of A
 
         vm.SelectSectionCommand.Execute(vm.Sections[1]);
 
-        Assert.Equal(0, vm.CurrentPageIndex);
+        Assert.Equal("b1", CurrentPage(vm));
     }
 
     [Fact]
@@ -57,54 +56,49 @@ public class KneeboardViewModelTests
         var vm = Load(("A", ["a1", "a2"]), ("B", ["b1", "b2", "b3"]));
 
         vm.SelectSectionCommand.Execute(vm.Sections[1]);
-        vm.CurrentPageIndex = 2;
+        TurnForward(vm, 2); // third page of B
 
         vm.SelectSectionCommand.Execute(vm.Sections[0]);
         vm.SelectSectionCommand.Execute(vm.Sections[1]);
 
-        Assert.Equal(2, vm.CurrentPageIndex);
+        Assert.Equal("b3", CurrentPage(vm));
     }
 
+    /// <summary>
+    /// Switching tabs must never announce the page the pilot was on in the section they left, paired
+    /// with the section they arrived at — the native image view picks that up as a real, if transient,
+    /// wrong page. A tripwire: it fails if the screen publishes anything but the arrived-at page.
+    /// </summary>
     [Fact]
-    public void SelectSection_NeverPublishesPageFromStalePageIndex()
+    public void SelectSection_NeverPublishesStalePage()
     {
         var vm = Load(("A", ["a1", "a2"]), ("B", ["b1", "b2"]));
-        vm.NextPageCommand.Execute(null); // section A, page index 1
+        vm.NextPageCommand.Execute(null); // second page of A
 
-        var published = new List<string>();
-        vm.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName == nameof(KneeboardViewModel.CurrentPage))
-                published.Add(Decode(vm.CurrentPage));
-        };
-
-        vm.SelectSectionCommand.Execute(vm.Sections[1]); // switch to section B
+        var published = PagesPublishedDuring(vm, () => vm.SelectSectionCommand.Execute(vm.Sections[1]));
 
         Assert.NotEmpty(published);
         Assert.All(published, page => Assert.Equal("b1", page));
     }
 
     [Fact]
-    public void CurrentPageDots_ReflectsCurrentPageIndex()
+    public void PageDots_LightTheDotForThePageOnScreen()
     {
         var vm = Load(("A", ["p1", "p2", "p3"]));
 
-        vm.CurrentPageIndex = 1;
+        vm.NextPageCommand.Execute(null);
 
-        Assert.Equal(3, vm.CurrentPageDots.Count);
-        Assert.False(vm.CurrentPageDots[0]);
-        Assert.True(vm.CurrentPageDots[1]);
-        Assert.False(vm.CurrentPageDots[2]);
+        Assert.Equal([false, true, false], PageDots(vm));
     }
 
     [Fact]
-    public void CurrentPage_ReturnsPageAtCurrentIndex()
+    public void CurrentPage_IsThePageTurnedTo()
     {
-        var vm = Load(("X", ["p1", "p2"]));
+        var vm = Load(("X", ["p1", "p2", "p3"]));
 
-        vm.CurrentPageIndex = 1;
+        TurnForward(vm, 2);
 
-        Assert.Equal("p2", Decode(vm.CurrentPage));
+        Assert.Equal("p3", CurrentPage(vm));
     }
 
     [Fact]
@@ -112,49 +106,49 @@ public class KneeboardViewModelTests
     {
         var vm = Load(("X", []));
 
-        Assert.True(vm.CurrentPage.IsEmpty);
+        Assert.Empty(CurrentPage(vm));
     }
 
     [Fact]
-    public void NextPageCommand_AdvancesIndex()
+    public void NextPageCommand_ShowsTheNextPage()
     {
         var vm = Load(("X", ["p1", "p2"]));
 
         vm.NextPageCommand.Execute(null);
 
-        Assert.Equal(1, vm.CurrentPageIndex);
+        Assert.Equal("p2", CurrentPage(vm));
     }
 
     [Fact]
     public void NextPageCommand_ClampsAtLastPage()
     {
         var vm = Load(("X", ["p1", "p2"]));
-        vm.CurrentPageIndex = 1;
+        TurnForward(vm, 1); // last page of X
 
         vm.NextPageCommand.Execute(null);
 
-        Assert.Equal(1, vm.CurrentPageIndex);
+        Assert.Equal("p2", CurrentPage(vm));
     }
 
     [Fact]
-    public void PreviousPageCommand_DecrementsIndex()
+    public void PreviousPageCommand_ShowsThePreviousPage()
     {
         var vm = Load(("X", ["p1", "p2"]));
-        vm.CurrentPageIndex = 1;
+        TurnForward(vm, 1); // second page of X
 
         vm.PreviousPageCommand.Execute(null);
 
-        Assert.Equal(0, vm.CurrentPageIndex);
+        Assert.Equal("p1", CurrentPage(vm));
     }
 
     [Fact]
-    public void PreviousPageCommand_ClampsAtZero()
+    public void PreviousPageCommand_ClampsAtFirstPage()
     {
         var vm = Load(("X", ["p1"]));
 
         vm.PreviousPageCommand.Execute(null);
 
-        Assert.Equal(0, vm.CurrentPageIndex);
+        Assert.Equal("p1", CurrentPage(vm));
     }
 
     [Fact]
@@ -168,7 +162,7 @@ public class KneeboardViewModelTests
         Assert.True(vm.HasError);
         Assert.Empty(vm.Sections);
         Assert.False(vm.IsLoading);
-        Assert.True(vm.CurrentPage.IsEmpty);
+        Assert.Empty(CurrentPage(vm));
     }
 
     [Fact]
@@ -178,11 +172,12 @@ public class KneeboardViewModelTests
             new StubDocumentService(),
             new FakeSectionSource(new Dictionary<string, string[]> { ["A"] = ["a1"] }));
 
-        // A binding that throws while consuming a notification — what BindableLayout does when a
-        // dot template fails to hydrate. It must not be able to leave the loading overlay up.
+        // A binding that throws while consuming a page notification — what BindableLayout does when
+        // a dot template fails to hydrate, and the dots are the first page notification of the load.
+        // It must not be able to leave the loading overlay up.
         vm.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName == nameof(KneeboardViewModel.CurrentPageDots))
+            if (AnnouncesPage(e))
                 throw new InvalidOperationException("binding blew up");
         };
 
@@ -204,6 +199,30 @@ public class KneeboardViewModelTests
         Assert.Null(recovered.ErrorMessage);
     }
 
+    // ── the screen's surface ───────────────────────────────────────────────────
+    //
+    // The only place in this file that names how the screen exposes where the pilot is in the
+    // document. Every assertion about the page, the dots or the highlighted tab goes through the
+    // three accessors, so when that surface changes, this is the one place that changes with it.
+    //
+    // AnnouncesPage is the other half of the same surface: two tests observe what the screen
+    // publishes rather than what it holds, and a notification can only be recognised by name. It
+    // lives here for the same reason the accessors do.
+
+    /// <summary>The page on screen, decoded — what the image view is showing.</summary>
+    private static string CurrentPage(KneeboardViewModel vm) => Decode(vm.CurrentPage);
+
+    /// <summary>One dot per page of the section on screen, lit for the page the pilot is on.</summary>
+    private static IReadOnlyList<bool> PageDots(KneeboardViewModel vm) => vm.CurrentPageDots;
+
+    /// <summary>The tab bar's highlight, one flag per tab.</summary>
+    private static IReadOnlyList<bool> SelectedTabs(KneeboardViewModel vm) =>
+        [.. vm.Sections.Select(s => s.IsSelected)];
+
+    /// <summary>The notifications on which the markup re-reads the page and its dots.</summary>
+    private static bool AnnouncesPage(PropertyChangedEventArgs e) =>
+        e.PropertyName is nameof(KneeboardViewModel.CurrentPage) or nameof(KneeboardViewModel.CurrentPageDots);
+
     // ── helpers ────────────────────────────────────────────────────────────────
 
     private static KneeboardViewModel Load(params (string Label, string[] Pages)[] sections)
@@ -214,6 +233,37 @@ public class KneeboardViewModelTests
 
         vm.Document = DocumentFor(sections);
         return vm;
+    }
+
+    /// <summary>Turns forward the way repeated taps on the page edge do.</summary>
+    private static void TurnForward(KneeboardViewModel vm, int pages)
+    {
+        for (var i = 0; i < pages; i++)
+            vm.NextPageCommand.Execute(null);
+    }
+
+    /// <summary>Every page the screen announced while <paramref name="act"/> ran, in order.</summary>
+    private static List<string> PagesPublishedDuring(KneeboardViewModel vm, Action act)
+    {
+        var published = new List<string>();
+
+        void Record(object? _, PropertyChangedEventArgs e)
+        {
+            if (AnnouncesPage(e))
+                published.Add(CurrentPage(vm));
+        }
+
+        vm.PropertyChanged += Record;
+        try
+        {
+            act();
+        }
+        finally
+        {
+            vm.PropertyChanged -= Record;
+        }
+
+        return published;
     }
 
     private static KneeboardDocument DocumentFor((string Label, string[] Pages)[] sections) => new()
@@ -234,7 +284,13 @@ public class KneeboardViewModelTests
 
     // ── test doubles ───────────────────────────────────────────────────────────
 
-    /// <summary>Keys pages off the section's folder, which the document builder sets to the label.</summary>
+    /// <summary>
+    /// Keys pages off the section's folder, which the document builder sets to the label.
+    ///
+    /// Must complete synchronously. The screen starts its load without awaiting it, so every test
+    /// here reads state on the line after it assigns the document; a fake that genuinely awaited
+    /// would make the whole file race.
+    /// </summary>
     private sealed class FakeSectionSource(Dictionary<string, string[]> pagesBySection) : ISectionSource
     {
         public Task<IReadOnlyList<ReadOnlyMemory<byte>>> GetPagesAsync(ContentSource? source)
