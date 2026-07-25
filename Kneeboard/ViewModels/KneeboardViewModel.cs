@@ -9,10 +9,16 @@ namespace Kneeboard.ViewModels;
 public partial class KneeboardViewModel : BaseViewModel
 {
     private readonly IDocumentService _documentService;
-    private readonly IPdfService _pdfService;
+    private readonly ISectionSource _sectionSource;
 
     [ObservableProperty]
     public partial KneeboardDocument? Document { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasError))]
+    public partial string? ErrorMessage { get; set; }
+
+    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
     private int _selectedSectionIndex;
     public int SelectedSectionIndex
@@ -27,7 +33,7 @@ public partial class KneeboardViewModel : BaseViewModel
                 OnPropertyChanged(nameof(CurrentPageIndex));
                 OnPropertyChanged(nameof(CurrentPages));
                 OnPropertyChanged(nameof(CurrentPageDots));
-                OnPropertyChanged(nameof(CurrentPageImagePath));
+                OnPropertyChanged(nameof(CurrentPage));
             }
         }
     }
@@ -41,7 +47,7 @@ public partial class KneeboardViewModel : BaseViewModel
             if (SetProperty(ref _currentPageIndex, value))
             {
                 OnPropertyChanged(nameof(CurrentPageDots));
-                OnPropertyChanged(nameof(CurrentPageImagePath));
+                OnPropertyChanged(nameof(CurrentPage));
             }
         }
     }
@@ -52,7 +58,7 @@ public partial class KneeboardViewModel : BaseViewModel
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
 
-    public IReadOnlyList<string> CurrentPages =>
+    public IReadOnlyList<ReadOnlyMemory<byte>> CurrentPages =>
         SelectedSectionIndex >= 0 && SelectedSectionIndex < Sections.Count
             ? Sections[SelectedSectionIndex].Pages
             : [];
@@ -60,15 +66,15 @@ public partial class KneeboardViewModel : BaseViewModel
     public IReadOnlyList<bool> CurrentPageDots =>
         CurrentPages.Select((_, i) => i == CurrentPageIndex).ToList();
 
-    public string CurrentPageImagePath =>
+    public ReadOnlyMemory<byte> CurrentPage =>
         CurrentPages.Count > 0 && CurrentPageIndex < CurrentPages.Count
             ? CurrentPages[CurrentPageIndex]
-            : string.Empty;
+            : ReadOnlyMemory<byte>.Empty;
 
-    public KneeboardViewModel(IDocumentService documentService, IPdfService pdfService)
+    public KneeboardViewModel(IDocumentService documentService, ISectionSource sectionSource)
     {
         _documentService = documentService;
-        _pdfService = pdfService;
+        _sectionSource = sectionSource;
         Sections = [];
     }
 
@@ -86,7 +92,7 @@ public partial class KneeboardViewModel : BaseViewModel
         for (var i = 0; i < Sections.Count; i++)
             Sections[i].IsSelected = i == value;
 
-        // Set the backing field directly so the CurrentPages/CurrentPageDots/CurrentPageImagePath
+        // Set the backing field directly so the CurrentPages/CurrentPageDots/CurrentPage
         // notifications raised by the caller are the only ones published, and they already reflect
         // the restored page of the new section — otherwise a stale-index/new-section combination is
         // briefly published first, which the native image view picks up as a real (if transient) wrong page.
@@ -96,6 +102,7 @@ public partial class KneeboardViewModel : BaseViewModel
     private async Task LoadDocumentAsync(KneeboardDocument doc)
     {
         IsLoading = true;
+        ErrorMessage = null;
         Title = doc.Title;
 
         try
@@ -103,40 +110,41 @@ public partial class KneeboardViewModel : BaseViewModel
             var sectionVMs = doc.Sections.Select(s => new SectionViewModel(s) { SelectCommand = SelectSectionCommand }).ToList();
 
             foreach (var vm in sectionVMs)
-            {
-                vm.Pages = vm.Section.Source switch
-                {
-                    PdfSource pdf => await _pdfService.RenderAllPagesAsync(pdf.Path),
-                    ImageFolderSource img => LoadImagesFromFolder(img.Folder),
-                    _ => []
-                };
-            }
+                vm.Pages = await _sectionSource.GetPagesAsync(vm.Section.Source);
 
-            Sections = sectionVMs;
-
-            // Set backing fields directly to avoid no-change guard on index 0 → 0
-            _selectedSectionIndex = 0;
-            _currentPageIndex = 0;
-            if (sectionVMs.Count > 0) sectionVMs[0].IsSelected = true;
-
-            OnPropertyChanged(nameof(SelectedSectionIndex));
-            OnPropertyChanged(nameof(CurrentPageIndex));
-            OnPropertyChanged(nameof(CurrentPages));
-            OnPropertyChanged(nameof(CurrentPageDots));
-            OnPropertyChanged(nameof(CurrentPageImagePath));
+            PublishSections(sectionVMs);
+        }
+        catch (Exception ex)
+        {
+            // OnDocumentChanged starts this without awaiting, so an escaping exception would go
+            // unobserved and leave the kneeboard silently empty.
+            ErrorMessage = ex.Message;
+            PublishSections([]);
         }
         finally
         {
+            // Alone in the finally, and after the notifications rather than before them: raising a
+            // notification runs binding and template code, and a binding that throws must not be
+            // able to skip this and strand the loading overlay over the page for the rest of the
+            // flight. An escaping exception now costs the dots, not the whole kneeboard.
             IsLoading = false;
         }
     }
 
-    private static IReadOnlyList<string> LoadImagesFromFolder(string folder)
+    private void PublishSections(List<SectionViewModel> sections)
     {
-        string[] extensions = [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp"];
-        return [.. Directory.GetFiles(folder)
-            .Where(f => extensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
-            .Order()];
+        Sections = sections;
+
+        // Set backing fields directly to avoid no-change guard on index 0 → 0
+        _selectedSectionIndex = 0;
+        _currentPageIndex = 0;
+        if (sections.Count > 0) sections[0].IsSelected = true;
+
+        OnPropertyChanged(nameof(SelectedSectionIndex));
+        OnPropertyChanged(nameof(CurrentPageIndex));
+        OnPropertyChanged(nameof(CurrentPages));
+        OnPropertyChanged(nameof(CurrentPageDots));
+        OnPropertyChanged(nameof(CurrentPage));
     }
 
     [RelayCommand]

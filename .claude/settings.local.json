@@ -46,7 +46,10 @@
       "Bash(git -C \"C:\\\\Users\\\\tomas.paseka_whalebo\\\\src-personal\\\\kneeboard\" log --oneline -3)",
       "Bash(git -C \"C:\\\\Users\\\\tomas.paseka_whalebo\\\\src-personal\\\\kneeboard\" status)",
       "Bash(git -C \"C:\\\\Users\\\\tomas.paseka_whalebo\\\\src-personal\\\\kneeboard\" diff origin/refactor/kneeboard-opener HEAD --stat)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Read(//c/Users/tomas.paseka_whalebo/.claude/**)",
+      "Bash(grep -E '\\\\.\\(cs|xaml|md\\)$')",
+      "Artifact"
     ]
   },
   "enabledPlugins": {

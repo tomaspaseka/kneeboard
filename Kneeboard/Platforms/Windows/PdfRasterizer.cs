@@ -5,16 +5,13 @@ using Kneeboard.Services;
 
 namespace Kneeboard.Platforms.Windows;
 
-public class PdfService : IPdfService
+public class PdfRasterizer : IPdfRasterizer
 {
-    public async Task<IReadOnlyList<string>> RenderAllPagesAsync(string pdfPath)
+    public async Task<IReadOnlyList<RenderedPage>> RenderAsync(string pdfPath)
     {
         var file = await StorageFile.GetFileFromPathAsync(pdfPath);
         var pdfDocument = await PdfDocument.LoadFromFileAsync(file);
-        var tempDir = Path.Combine(Path.GetTempPath(), "kneeboard_pdf", Path.GetFileNameWithoutExtension(pdfPath));
-        if (Directory.Exists(tempDir)) Directory.Delete(tempDir, recursive: true);
-        Directory.CreateDirectory(tempDir);
-        var pages = new List<string>((int)pdfDocument.PageCount);
+        var pages = new List<RenderedPage>((int)pdfDocument.PageCount);
 
         for (uint i = 0; i < pdfDocument.PageCount; i++)
         {
@@ -29,13 +26,12 @@ public class PdfService : IPdfService
                 var bytes = new byte[stream.Size];
                 reader.ReadBytes(bytes);
 
-                var pagePath = Path.Combine(tempDir, $"page_{i:D4}.png");
-                await File.WriteAllBytesAsync(pagePath, bytes);
-                pages.Add(pagePath);
+                pages.Add(RenderedPage.Ok(bytes));
             }
             catch
             {
-                // Failed pages are silently skipped; the rest of the document still loads.
+                // Reported, not dropped — SectionSource substitutes a placeholder so page numbering holds.
+                pages.Add(RenderedPage.Failed());
             }
         }
 

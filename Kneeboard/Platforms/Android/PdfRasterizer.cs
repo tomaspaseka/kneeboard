@@ -3,24 +3,20 @@ using Android.Graphics.Pdf;
 using Android.OS;
 using Kneeboard.Services;
 
-using IOPath = System.IO.Path;
 using JavaFile = Java.IO.File;
 
 namespace Kneeboard.Platforms.Android;
 
-public class PdfService : IPdfService
+public class PdfRasterizer : IPdfRasterizer
 {
-    public Task<IReadOnlyList<string>> RenderAllPagesAsync(string pdfPath)
+    public Task<IReadOnlyList<RenderedPage>> RenderAsync(string pdfPath)
     {
         using var fd = ParcelFileDescriptor.Open(
             new JavaFile(pdfPath),
             ParcelFileMode.ReadOnly);
 
         using var renderer = new PdfRenderer(fd!);
-        var tempDir = IOPath.Combine(IOPath.GetTempPath(), "kneeboard_pdf", IOPath.GetFileNameWithoutExtension(pdfPath));
-        if (Directory.Exists(tempDir)) Directory.Delete(tempDir, recursive: true);
-        Directory.CreateDirectory(tempDir);
-        var pages = new List<string>(renderer.PageCount);
+        var pages = new List<RenderedPage>(renderer.PageCount);
 
         for (int i = 0; i < renderer.PageCount; i++)
         {
@@ -33,16 +29,15 @@ public class PdfService : IPdfService
                 using var ms = new MemoryStream();
                 bitmap.Compress(Bitmap.CompressFormat.Png!, 100, ms);
 
-                var pagePath = IOPath.Combine(tempDir, $"page_{i:D4}.png");
-                File.WriteAllBytes(pagePath, ms.ToArray());
-                pages.Add(pagePath);
+                pages.Add(RenderedPage.Ok(ms.ToArray()));
             }
             catch
             {
-                // Failed pages are silently skipped; the rest of the document still loads.
+                // Reported, not dropped — SectionSource substitutes a placeholder so page numbering holds.
+                pages.Add(RenderedPage.Failed());
             }
         }
 
-        return Task.FromResult<IReadOnlyList<string>>(pages);
+        return Task.FromResult<IReadOnlyList<RenderedPage>>(pages);
     }
 }

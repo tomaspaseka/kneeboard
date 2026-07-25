@@ -1,3 +1,4 @@
+using System.Text;
 using Kneeboard.Models;
 using Kneeboard.Services;
 using Kneeboard.ViewModels;
@@ -5,23 +6,12 @@ using Xunit;
 
 namespace Kneeboard.Tests.ViewModels;
 
-public class KneeboardViewModelTests : IDisposable
+public class KneeboardViewModelTests
 {
-    private readonly List<string> _tempDirs = [];
-
-    public void Dispose()
-    {
-        foreach (var d in _tempDirs)
-            if (Directory.Exists(d)) Directory.Delete(d, recursive: true);
-    }
-
     [Fact]
     public void SetDocument_LoadsAllSections_FirstSelected()
     {
-        var doc = TwoSectionDoc();
-        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
-
-        vm.Document = doc;
+        var vm = Load(("A", ["a1"]), ("B", ["b1"]));
 
         Assert.Equal(2, vm.Sections.Count);
         Assert.Equal(0, vm.SelectedSectionIndex);
@@ -33,10 +23,7 @@ public class KneeboardViewModelTests : IDisposable
     [Fact]
     public void SetDocument_SetsTitle()
     {
-        var doc = TwoSectionDoc();
-        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
-
-        vm.Document = doc;
+        var vm = Load(("A", ["a1"]), ("B", ["b1"]));
 
         Assert.Equal("EPKK 2026-06-10", vm.Title);
     }
@@ -44,9 +31,7 @@ public class KneeboardViewModelTests : IDisposable
     [Fact]
     public void SelectSection_UpdatesSelectedIndexAndIsSelected()
     {
-        var doc = TwoSectionDoc();
-        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
-        vm.Document = doc;
+        var vm = Load(("A", ["a1"]), ("B", ["b1"]));
 
         vm.SelectSectionCommand.Execute(vm.Sections[1]);
 
@@ -58,9 +43,7 @@ public class KneeboardViewModelTests : IDisposable
     [Fact]
     public void SelectSection_UnvisitedSection_StartsAtPageZero()
     {
-        var doc = TwoSectionDoc();
-        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
-        vm.Document = doc;
+        var vm = Load(("A", ["a1", "a2", "a3", "a4"]), ("B", ["b1", "b2"]));
         vm.CurrentPageIndex = 3;
 
         vm.SelectSectionCommand.Execute(vm.Sections[1]);
@@ -71,9 +54,7 @@ public class KneeboardViewModelTests : IDisposable
     [Fact]
     public void SelectSection_RevisitedSection_RestoresLastViewedPage()
     {
-        var doc = TwoSectionDoc();
-        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
-        vm.Document = doc;
+        var vm = Load(("A", ["a1", "a2"]), ("B", ["b1", "b2", "b3"]));
 
         vm.SelectSectionCommand.Execute(vm.Sections[1]);
         vm.CurrentPageIndex = 2;
@@ -85,58 +66,28 @@ public class KneeboardViewModelTests : IDisposable
     }
 
     [Fact]
-    public void SelectSection_NeverPublishesImagePathFromStalePageIndex()
+    public void SelectSection_NeverPublishesPageFromStalePageIndex()
     {
-        var folderA = CreateTempFolder();
-        File.WriteAllText(Path.Combine(folderA, "a1.png"), "");
-        File.WriteAllText(Path.Combine(folderA, "a2.png"), "");
-        var folderB = CreateTempFolder();
-        File.WriteAllText(Path.Combine(folderB, "b1.png"), "");
-        File.WriteAllText(Path.Combine(folderB, "b2.png"), "");
-
-        var doc = new KneeboardDocument
-        {
-            Title = "T",
-            Sections =
-            [
-                new() { Id = "a", Label = "A", Source = new ImageFolderSource { Folder = folderA } },
-                new() { Id = "b", Label = "B", Source = new ImageFolderSource { Folder = folderB } }
-            ]
-        };
-        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
-        vm.Document = doc;
+        var vm = Load(("A", ["a1", "a2"]), ("B", ["b1", "b2"]));
         vm.NextPageCommand.Execute(null); // section A, page index 1
 
-        var publishedImagePaths = new List<string>();
+        var published = new List<string>();
         vm.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName == nameof(KneeboardViewModel.CurrentPageImagePath))
-                publishedImagePaths.Add(vm.CurrentPageImagePath);
+            if (e.PropertyName == nameof(KneeboardViewModel.CurrentPage))
+                published.Add(Decode(vm.CurrentPage));
         };
 
         vm.SelectSectionCommand.Execute(vm.Sections[1]); // switch to section B
 
-        Assert.All(publishedImagePaths, path => Assert.EndsWith("b1.png", path));
+        Assert.NotEmpty(published);
+        Assert.All(published, page => Assert.Equal("b1", page));
     }
 
     [Fact]
     public void CurrentPageDots_ReflectsCurrentPageIndex()
     {
-        var folder = CreateTempFolder();
-        File.WriteAllText(Path.Combine(folder, "p1.png"), "");
-        File.WriteAllText(Path.Combine(folder, "p2.png"), "");
-        File.WriteAllText(Path.Combine(folder, "p3.png"), "");
-
-        var doc = new KneeboardDocument
-        {
-            Title = "T",
-            Sections =
-            [
-                new() { Id = "a", Label = "A", Source = new ImageFolderSource { Folder = folder } }
-            ]
-        };
-        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
-        vm.Document = doc;
+        var vm = Load(("A", ["p1", "p2", "p3"]));
 
         vm.CurrentPageIndex = 1;
 
@@ -147,45 +98,27 @@ public class KneeboardViewModelTests : IDisposable
     }
 
     [Fact]
-    public void CurrentPageImagePath_ReturnsPathAtCurrentIndex()
+    public void CurrentPage_ReturnsPageAtCurrentIndex()
     {
-        var folder = CreateTempFolder();
-        File.WriteAllText(Path.Combine(folder, "p1.png"), "");
-        File.WriteAllText(Path.Combine(folder, "p2.png"), "");
-        var doc = new KneeboardDocument
-        {
-            Title = "T",
-            Sections = [new() { Id = "x", Label = "X", Source = new ImageFolderSource { Folder = folder } }]
-        };
-        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
-        vm.Document = doc;
+        var vm = Load(("X", ["p1", "p2"]));
 
         vm.CurrentPageIndex = 1;
 
-        Assert.EndsWith("p2.png", vm.CurrentPageImagePath);
+        Assert.Equal("p2", Decode(vm.CurrentPage));
     }
 
     [Fact]
-    public void CurrentPageImagePath_EmptyWhenNoPages()
+    public void CurrentPage_EmptyWhenNoPages()
     {
-        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
+        var vm = Load(("X", []));
 
-        Assert.Equal(string.Empty, vm.CurrentPageImagePath);
+        Assert.True(vm.CurrentPage.IsEmpty);
     }
 
     [Fact]
     public void NextPageCommand_AdvancesIndex()
     {
-        var folder = CreateTempFolder();
-        File.WriteAllText(Path.Combine(folder, "p1.png"), "");
-        File.WriteAllText(Path.Combine(folder, "p2.png"), "");
-        var doc = new KneeboardDocument
-        {
-            Title = "T",
-            Sections = [new() { Id = "x", Label = "X", Source = new ImageFolderSource { Folder = folder } }]
-        };
-        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
-        vm.Document = doc;
+        var vm = Load(("X", ["p1", "p2"]));
 
         vm.NextPageCommand.Execute(null);
 
@@ -195,16 +128,7 @@ public class KneeboardViewModelTests : IDisposable
     [Fact]
     public void NextPageCommand_ClampsAtLastPage()
     {
-        var folder = CreateTempFolder();
-        File.WriteAllText(Path.Combine(folder, "p1.png"), "");
-        File.WriteAllText(Path.Combine(folder, "p2.png"), "");
-        var doc = new KneeboardDocument
-        {
-            Title = "T",
-            Sections = [new() { Id = "x", Label = "X", Source = new ImageFolderSource { Folder = folder } }]
-        };
-        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
-        vm.Document = doc;
+        var vm = Load(("X", ["p1", "p2"]));
         vm.CurrentPageIndex = 1;
 
         vm.NextPageCommand.Execute(null);
@@ -215,16 +139,7 @@ public class KneeboardViewModelTests : IDisposable
     [Fact]
     public void PreviousPageCommand_DecrementsIndex()
     {
-        var folder = CreateTempFolder();
-        File.WriteAllText(Path.Combine(folder, "p1.png"), "");
-        File.WriteAllText(Path.Combine(folder, "p2.png"), "");
-        var doc = new KneeboardDocument
-        {
-            Title = "T",
-            Sections = [new() { Id = "x", Label = "X", Source = new ImageFolderSource { Folder = folder } }]
-        };
-        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
-        vm.Document = doc;
+        var vm = Load(("X", ["p1", "p2"]));
         vm.CurrentPageIndex = 1;
 
         vm.PreviousPageCommand.Execute(null);
@@ -235,50 +150,110 @@ public class KneeboardViewModelTests : IDisposable
     [Fact]
     public void PreviousPageCommand_ClampsAtZero()
     {
-        var folder = CreateTempFolder();
-        File.WriteAllText(Path.Combine(folder, "p1.png"), "");
-        var doc = new KneeboardDocument
-        {
-            Title = "T",
-            Sections = [new() { Id = "x", Label = "X", Source = new ImageFolderSource { Folder = folder } }]
-        };
-        var vm = new KneeboardViewModel(new StubDocumentService(), new StubPdfService());
-        vm.Document = doc;
+        var vm = Load(("X", ["p1"]));
 
         vm.PreviousPageCommand.Execute(null);
 
         Assert.Equal(0, vm.CurrentPageIndex);
     }
 
+    [Fact]
+    public void SetDocument_WhenSectionSourceThrows_SurfacesErrorAndFinishesLoading()
+    {
+        var vm = new KneeboardViewModel(new StubDocumentService(), new ThrowingSectionSource("folder not found"));
+
+        vm.Document = DocumentFor([("A", [])]);
+
+        Assert.Equal("folder not found", vm.ErrorMessage);
+        Assert.True(vm.HasError);
+        Assert.Empty(vm.Sections);
+        Assert.False(vm.IsLoading);
+        Assert.True(vm.CurrentPage.IsEmpty);
+    }
+
+    [Fact]
+    public void SetDocument_WhenABindingThrowsOnNotification_StillFinishesLoading()
+    {
+        var vm = new KneeboardViewModel(
+            new StubDocumentService(),
+            new FakeSectionSource(new Dictionary<string, string[]> { ["A"] = ["a1"] }));
+
+        // A binding that throws while consuming a notification — what BindableLayout does when a
+        // dot template fails to hydrate. It must not be able to leave the loading overlay up.
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(KneeboardViewModel.CurrentPageDots))
+                throw new InvalidOperationException("binding blew up");
+        };
+
+        vm.Document = DocumentFor([("A", ["a1"])]);
+
+        Assert.False(vm.IsLoading);
+    }
+
+    [Fact]
+    public void SetDocument_AfterFailure_ClearsPreviousError()
+    {
+        var vm = new KneeboardViewModel(new StubDocumentService(), new ThrowingSectionSource("folder not found"));
+        vm.Document = DocumentFor([("A", [])]);
+
+        var recovered = Load(("A", ["a1"]));
+
+        Assert.True(vm.HasError);
+        Assert.False(recovered.HasError);
+        Assert.Null(recovered.ErrorMessage);
+    }
+
     // ── helpers ────────────────────────────────────────────────────────────────
 
-    private KneeboardDocument TwoSectionDoc() => new()
+    private static KneeboardViewModel Load(params (string Label, string[] Pages)[] sections)
+    {
+        var vm = new KneeboardViewModel(
+            new StubDocumentService(),
+            new FakeSectionSource(sections.ToDictionary(s => s.Label, s => s.Pages)));
+
+        vm.Document = DocumentFor(sections);
+        return vm;
+    }
+
+    private static KneeboardDocument DocumentFor((string Label, string[] Pages)[] sections) => new()
     {
         Title = "EPKK 2026-06-10",
         Sections =
         [
-            new() { Id = "a", Label = "A", Source = new ImageFolderSource { Folder = CreateTempFolder() } },
-            new() { Id = "b", Label = "B", Source = new ImageFolderSource { Folder = CreateTempFolder() } }
+            .. sections.Select(s => new KneeboardSection
+            {
+                Id = s.Label,
+                Label = s.Label,
+                Source = new ImageFolderSource { Folder = s.Label }
+            })
         ]
     };
 
-    private string CreateTempFolder()
+    private static string Decode(ReadOnlyMemory<byte> page) => Encoding.UTF8.GetString(page.Span);
+
+    // ── test doubles ───────────────────────────────────────────────────────────
+
+    /// <summary>Keys pages off the section's folder, which the document builder sets to the label.</summary>
+    private sealed class FakeSectionSource(Dictionary<string, string[]> pagesBySection) : ISectionSource
     {
-        var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        Directory.CreateDirectory(dir);
-        _tempDirs.Add(dir);
-        return dir;
+        public Task<IReadOnlyList<ReadOnlyMemory<byte>>> GetPagesAsync(ContentSource? source)
+        {
+            var key = ((ImageFolderSource)source!).Folder;
+            return Task.FromResult<IReadOnlyList<ReadOnlyMemory<byte>>>(
+                [.. pagesBySection[key].Select(page => (ReadOnlyMemory<byte>)Encoding.UTF8.GetBytes(page))]);
+        }
     }
 
-    private class StubDocumentService : IDocumentService
+    private sealed class ThrowingSectionSource(string message) : ISectionSource
+    {
+        public Task<IReadOnlyList<ReadOnlyMemory<byte>>> GetPagesAsync(ContentSource? source) =>
+            throw new DirectoryNotFoundException(message);
+    }
+
+    private sealed class StubDocumentService : IDocumentService
     {
         public Task<DocumentLoadResult> PickAndLoadAsync() => Task.FromResult(DocumentLoadResult.Cancelled());
         public Task<DocumentLoadResult> LoadFromPathAsync(string p) => Task.FromResult(DocumentLoadResult.Cancelled());
-    }
-
-    private class StubPdfService : IPdfService
-    {
-        public Task<IReadOnlyList<string>> RenderAllPagesAsync(string pdfPath) =>
-            Task.FromResult<IReadOnlyList<string>>([]);
     }
 }
