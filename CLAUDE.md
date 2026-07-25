@@ -40,3 +40,17 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). F
 ## Architecture
 
 See [`arch/overview.md`](arch/overview.md).
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as GitHub issues in `tomaspaseka/kneeboard`, driven by the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage roles, each label string equal to its name. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.

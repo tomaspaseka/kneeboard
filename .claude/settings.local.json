@@ -49,7 +49,10 @@
       "Bash(git *)",
       "Read(//c/Users/tomas.paseka_whalebo/.claude/**)",
       "Bash(grep -E '\\\\.\\(cs|xaml|md\\)$')",
-      "Artifact"
+      "Artifact",
+      "Bash(xargs wc -l)",
+      "Bash(gh issue *)",
+      "Bash(echo \"exit=$?\")"
     ]
   },
   "enabledPlugins": {
