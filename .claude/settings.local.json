@@ -52,7 +52,10 @@
       "Artifact",
       "Bash(xargs wc -l)",
       "Bash(gh issue *)",
-      "Bash(echo \"exit=$?\")"
+      "Bash(echo \"exit=$?\")",
+      "Bash(grep -o '\"worktree[^}]\\\\{0,400\\\\}' \"/c/Users/tomas.paseka_whalebo/.claude/projects/C--Users-tomas-paseka-whalebo-src-personal-kneeboard/59849874-fd80-4a5c-9758-46c14de7a57a.jsonl\")",
+      "Bash(grep -o '\"worktree\\\\\\\\\":.\\\\{0,3000\\\\}' \"/c/Users/tomas.paseka_whalebo/.claude/projects/C--Users-tomas-paseka-whalebo-src-personal-kneeboard/59849874-fd80-4a5c-9758-46c14de7a57a.jsonl\")",
+      "Bash(echo \"---exit=$?\")"
     ]
   },
   "enabledPlugins": {
