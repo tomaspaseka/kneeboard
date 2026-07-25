@@ -36,7 +36,29 @@
       "PowerShell(dotnet msbuild *)",
       "PowerShell(git check-ignore *)",
       "Bash(git check-ignore *)",
-      "Bash(code --list-extensions)"
+      "Bash(code --list-extensions)",
+      "Bash(git push *)",
+      "PowerShell($ts = \\(Get-Date\\).ToString\\(\"yyyyMMdd-HHmmss\"\\); $p = Join-Path $env:TEMP \"architecture-review-$ts.html\"; Write-Output $p)",
+      "PowerShell(Start-Process \"C:\\\\Users\\\\TOMAS~1.PAS\\\\AppData\\\\Local\\\\Temp\\\\architecture-review-20260725-075851.html\")",
+      "Bash(echo \"jq exit: $?\")",
+      "PowerShell(git push *)",
+      "Bash(git status *)",
+      "Bash(git -C \"C:\\\\Users\\\\tomas.paseka_whalebo\\\\src-personal\\\\kneeboard\" log --oneline -3)",
+      "Bash(git -C \"C:\\\\Users\\\\tomas.paseka_whalebo\\\\src-personal\\\\kneeboard\" status)",
+      "Bash(git -C \"C:\\\\Users\\\\tomas.paseka_whalebo\\\\src-personal\\\\kneeboard\" diff origin/refactor/kneeboard-opener HEAD --stat)",
+      "Bash(git *)",
+      "Read(//c/Users/tomas.paseka_whalebo/.claude/**)",
+      "Bash(grep -E '\\\\.\\(cs|xaml|md\\)$')",
+      "Artifact",
+      "Bash(xargs wc -l)",
+      "Bash(gh issue *)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(grep -o '\"worktree[^}]\\\\{0,400\\\\}' \"/c/Users/tomas.paseka_whalebo/.claude/projects/C--Users-tomas-paseka-whalebo-src-personal-kneeboard/59849874-fd80-4a5c-9758-46c14de7a57a.jsonl\")",
+      "Bash(grep -o '\"worktree\\\\\\\\\":.\\\\{0,3000\\\\}' \"/c/Users/tomas.paseka_whalebo/.claude/projects/C--Users-tomas-paseka-whalebo-src-personal-kneeboard/59849874-fd80-4a5c-9758-46c14de7a57a.jsonl\")",
+      "Bash(echo \"---exit=$?\")"
     ]
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": false
   }
 }

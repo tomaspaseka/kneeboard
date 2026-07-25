@@ -12,7 +12,7 @@ public class ZoomablePageViewHandler : ViewHandler<ZoomablePageView, ScrollViewe
     public static PropertyMapper<ZoomablePageView, ZoomablePageViewHandler> Mapper =
         new(ViewMapper)
         {
-            [nameof(ZoomablePageView.ImageSource)] = MapImageSource,
+            [nameof(ZoomablePageView.PageImage)] = MapPageImage,
         };
 
     private Microsoft.UI.Xaml.Controls.Image _image = null!;
@@ -101,17 +101,23 @@ public class ZoomablePageViewHandler : ViewHandler<ZoomablePageView, ScrollViewe
         PlatformView.ChangeView(0, 0, 1.0f, disableAnimation: true);
     }
 
-    private static void MapImageSource(ZoomablePageViewHandler handler, ZoomablePageView view)
+    private static void MapPageImage(ZoomablePageViewHandler handler, ZoomablePageView view)
     {
-        var path = view.ImageSource;
-        if (string.IsNullOrEmpty(path))
+        var bytes = view.PageImage;
+        if (bytes.IsEmpty)
         {
             handler._image.Source = null;
+            return;
         }
-        else
-        {
-            handler._image.Source = new BitmapImage(new Uri(path));
-            handler.PlatformView.ChangeView(0, 0, 1.0f, disableAnimation: true);
-        }
+
+        // Deliberately synchronous: SetSource (not SetSourceAsync) keeps this mapper ordering-safe,
+        // so a fast page turn can't land an earlier decode over a later page. The stream is not
+        // disposed here — the decoder reads from it after this returns, and the adapter keeps it
+        // alive for as long as the BitmapImage needs it.
+        var bitmap = new BitmapImage();
+        bitmap.SetSource(new MemoryStream(bytes.ToArray()).AsRandomAccessStream());
+
+        handler._image.Source = bitmap;
+        handler.PlatformView.ChangeView(0, 0, 1.0f, disableAnimation: true);
     }
 }

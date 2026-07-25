@@ -31,11 +31,12 @@ public static class MauiProgram
         // Services
         builder.Services.AddSingleton<IDocumentService, DocumentService>();
         builder.Services.AddSingleton<INavigationService, NavigationService>();
+        builder.Services.AddSingleton<ISectionSource, SectionSource>();
 
 #if WINDOWS
-        builder.Services.AddSingleton<IPdfService, Platforms.Windows.PdfService>();
+        builder.Services.AddSingleton<IPdfRasterizer, Platforms.Windows.PdfRasterizer>();
 #elif ANDROID
-        builder.Services.AddSingleton<IPdfService, Platforms.Android.PdfService>();
+        builder.Services.AddSingleton<IPdfRasterizer, Platforms.Android.PdfRasterizer>();
 #endif
 
         // Pages + ViewModels (transient: fresh instance each navigation)
