@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:vm="clr-namespace:Kneeboard.ViewModels"
              xmlns:controls="clr-namespace:Kneeboard.Controls"
+             xmlns:converters="clr-namespace:Kneeboard.Converters"
              x:Class="Kneeboard.Views.KneeboardPage"
              x:DataType="vm:KneeboardViewModel"
              x:Name="Self"
@@ -13,9 +13,9 @@
     <ContentPage.Resources>
         <Color x:Key="ActiveDotColor">#E94560</Color>
         <Color x:Key="InactiveDotColor">#374151</Color>
-        <toolkit:BoolToObjectConverter x:Key="DotColorConverter"
-                                       TrueObject="{StaticResource ActiveDotColor}"
-                                       FalseObject="{StaticResource InactiveDotColor}" />
+        <converters:PageDotColorConverter x:Key="DotColorConverter"
+                                          ActiveColor="{StaticResource ActiveDotColor}"
+                                          InactiveColor="{StaticResource InactiveDotColor}" />
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*,Auto">

@@ -172,6 +172,26 @@ public class KneeboardViewModelTests
     }
 
     [Fact]
+    public void SetDocument_WhenABindingThrowsOnNotification_StillFinishesLoading()
+    {
+        var vm = new KneeboardViewModel(
+            new StubDocumentService(),
+            new FakeSectionSource(new Dictionary<string, string[]> { ["A"] = ["a1"] }));
+
+        // A binding that throws while consuming a notification — what BindableLayout does when a
+        // dot template fails to hydrate. It must not be able to leave the loading overlay up.
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(KneeboardViewModel.CurrentPageDots))
+                throw new InvalidOperationException("binding blew up");
+        };
+
+        vm.Document = DocumentFor([("A", ["a1"])]);
+
+        Assert.False(vm.IsLoading);
+    }
+
+    [Fact]
     public void SetDocument_AfterFailure_ClearsPreviousError()
     {
         var vm = new KneeboardViewModel(new StubDocumentService(), new ThrowingSectionSource("folder not found"));

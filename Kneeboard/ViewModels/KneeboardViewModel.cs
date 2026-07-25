@@ -112,31 +112,39 @@ public partial class KneeboardViewModel : BaseViewModel
             foreach (var vm in sectionVMs)
                 vm.Pages = await _sectionSource.GetPagesAsync(vm.Section.Source);
 
-            Sections = sectionVMs;
-
-            // Set backing fields directly to avoid no-change guard on index 0 → 0
-            _selectedSectionIndex = 0;
-            _currentPageIndex = 0;
-            if (sectionVMs.Count > 0) sectionVMs[0].IsSelected = true;
+            PublishSections(sectionVMs);
         }
         catch (Exception ex)
         {
             // OnDocumentChanged starts this without awaiting, so an escaping exception would go
             // unobserved and leave the kneeboard silently empty.
             ErrorMessage = ex.Message;
-            Sections = [];
-            _selectedSectionIndex = 0;
-            _currentPageIndex = 0;
+            PublishSections([]);
         }
         finally
         {
-            OnPropertyChanged(nameof(SelectedSectionIndex));
-            OnPropertyChanged(nameof(CurrentPageIndex));
-            OnPropertyChanged(nameof(CurrentPages));
-            OnPropertyChanged(nameof(CurrentPageDots));
-            OnPropertyChanged(nameof(CurrentPage));
+            // Alone in the finally, and after the notifications rather than before them: raising a
+            // notification runs binding and template code, and a binding that throws must not be
+            // able to skip this and strand the loading overlay over the page for the rest of the
+            // flight. An escaping exception now costs the dots, not the whole kneeboard.
             IsLoading = false;
         }
+    }
+
+    private void PublishSections(List<SectionViewModel> sections)
+    {
+        Sections = sections;
+
+        // Set backing fields directly to avoid no-change guard on index 0 → 0
+        _selectedSectionIndex = 0;
+        _currentPageIndex = 0;
+        if (sections.Count > 0) sections[0].IsSelected = true;
+
+        OnPropertyChanged(nameof(SelectedSectionIndex));
+        OnPropertyChanged(nameof(CurrentPageIndex));
+        OnPropertyChanged(nameof(CurrentPages));
+        OnPropertyChanged(nameof(CurrentPageDots));
+        OnPropertyChanged(nameof(CurrentPage));
     }
 
     [RelayCommand]
