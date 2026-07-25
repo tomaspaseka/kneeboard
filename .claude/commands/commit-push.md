@@ -14,4 +14,3 @@ Use the `Agent` tool with:
 Give the subagent this prompt:
 
 commit local changes and push current branch into upstream
-/
