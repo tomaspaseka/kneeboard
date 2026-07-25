@@ -74,11 +74,22 @@
         <Grid Grid.Row="1">
 
             <controls:ZoomablePageView
-                ImageSource="{Binding CurrentPageImagePath}"
+                PageImage="{Binding CurrentPage}"
                 PreviousPageCommand="{Binding PreviousPageCommand}"
                 NextPageCommand="{Binding NextPageCommand}"
                 HorizontalOptions="Fill"
                 VerticalOptions="Fill" />
+
+            <!-- Load failure -->
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding HasError}"
+                   TextColor="#F87171"
+                   FontSize="14"
+                   Padding="24"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"
+                   HorizontalTextAlignment="Center"
+                   MaximumWidthRequest="500" />
 
             <!-- Loading overlay -->
             <Grid IsVisible="{Binding IsLoading}"
