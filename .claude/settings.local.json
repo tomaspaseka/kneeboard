@@ -40,7 +40,9 @@
       "Bash(git push *)",
       "PowerShell($ts = \\(Get-Date\\).ToString\\(\"yyyyMMdd-HHmmss\"\\); $p = Join-Path $env:TEMP \"architecture-review-$ts.html\"; Write-Output $p)",
       "PowerShell(Start-Process \"C:\\\\Users\\\\TOMAS~1.PAS\\\\AppData\\\\Local\\\\Temp\\\\architecture-review-20260725-075851.html\")",
-      "Bash(echo \"jq exit: $?\")"
+      "Bash(echo \"jq exit: $?\")",
+      "PowerShell(git push *)",
+      "Bash(git status *)"
     ]
   },
   "enabledPlugins": {
