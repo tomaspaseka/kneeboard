@@ -10,4 +10,9 @@
 }
 ```
 
-Paths are relative to the `.kneeboard` file's directory; `DocumentService` resolves them to absolute at load time. Image folders load `.png .jpg .jpeg .bmp .gif .webp` files sorted by filename.
+Paths are relative to the `.kneeboard` file's directory; `DocumentService` resolves them to absolute at load time.
+
+`SectionSource` turns each section's content source into that section's pages. It is the single place
+that knows how each source kind becomes pages — image folders take `.png .jpg .jpeg .bmp .gif .webp`
+(case-insensitive) sorted by filename; pdfs go to the platform rasterizer. Those rules are covered by
+`Kneeboard.Tests/Services/SectionSourceTests.cs` rather than described only here.
