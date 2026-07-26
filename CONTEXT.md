@@ -48,9 +48,25 @@ A page that fails to rasterize is reported as failed rather than dropped, and th
 substitutes a placeholder image. Page count therefore always matches the original document: a
 pilot sees that a page is missing instead of silently flying with a short one.
 
+## Binder
+
+The material of an open document as the pilot has it in front of them: every section's pages, the page
+they are on in each, and how each is framed. Immutable (`Binder`) — turning, selecting and framing each
+return a new binder, and one that changes nothing returns itself. It is the only place that knows where
+the pilot is, so nothing can hold two answers at once.
+
+## Framing
+
+How far into a page the pilot is zoomed, and which point of the page sits at the centre of the screen.
+Held per **section**, not per page: switch tabs and come back and the framing is restored, but turning a
+page clears it back to the fit. Expressed relative to the page rather than in screen pixels, so it means
+the same thing at any window size and survives a resize untouched. Not "zoom level" and not "viewport" —
+both name only half of it.
+
 ## Page navigation zone
 
 The part of the screen where a tap pages the section: the outer fifth of the page on each side, plus
 any empty space beyond it out to the screen edge. The middle three fifths of the page is not a
-navigation zone — that is left to zoom and pan. Measured against the page as currently drawn, so
-zooming moves the zones with it. Not "tap zone" and not "nav zone".
+navigation zone — that is left to zoom and pan. Measured in the page's own coordinates, so the zones are
+attached to the page and not to the screen: zooming carries them out of view with the rest of the page,
+and paging while zoomed needs the pilot panned to an edge. Not "tap zone" and not "nav zone".

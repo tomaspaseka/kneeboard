@@ -81,6 +81,91 @@ public class KneeboardViewModelTests
         Assert.All(published, page => Assert.Equal("b1", page));
     }
 
+    // ── framing ────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void SelectSection_RevisitedSection_RestoresHowItWasFramed()
+    {
+        var vm = Load(("A", ["a1"]), ("B", ["b1"]));
+
+        vm.SelectSectionCommand.Execute(vm.Sections[1]);
+        vm.CurrentFraming = Zoomed;                      // the pilot zooms into B
+        vm.SelectSectionCommand.Execute(vm.Sections[0]); // away to A
+        vm.SelectSectionCommand.Execute(vm.Sections[1]); // and back
+
+        Assert.Equal(Zoomed, CurrentFraming(vm));
+    }
+
+    [Fact]
+    public void SelectSection_UnvisitedSection_StartsFittedToTheScreen()
+    {
+        var vm = Load(("A", ["a1"]), ("B", ["b1"]));
+        vm.CurrentFraming = Zoomed;
+
+        vm.SelectSectionCommand.Execute(vm.Sections[1]);
+
+        Assert.Equal(Framing.Fit, CurrentFraming(vm));
+    }
+
+    [Fact]
+    public void NextPageCommand_ReturnsTheSectionToTheFit()
+    {
+        var vm = Load(("A", ["a1", "a2"]));
+        vm.CurrentFraming = Zoomed;
+
+        vm.NextPageCommand.Execute(null);
+
+        Assert.Equal(Framing.Fit, CurrentFraming(vm));
+    }
+
+    /// <summary>A tap at the end of a section turns nothing, so it takes nothing away either.</summary>
+    [Fact]
+    public void NextPageCommand_AtTheLastPage_KeepsTheFraming()
+    {
+        var vm = Load(("A", ["a1"]));
+        vm.CurrentFraming = Zoomed;
+
+        vm.NextPageCommand.Execute(null);
+
+        Assert.Equal(Zoomed, CurrentFraming(vm));
+    }
+
+    [Fact]
+    public void SetDocument_StartsEverySectionFittedToTheScreen()
+    {
+        var vm = Load(("A", ["a1"]));
+        vm.CurrentFraming = Zoomed;
+
+        vm.Document = DocumentFor([("A", ["a1"])]); // another mission opened
+
+        Assert.Equal(Framing.Fit, CurrentFraming(vm));
+    }
+
+    /// <summary>
+    /// The image view is handed the page and the framing separately, and a framing means nothing until
+    /// the page it frames is on screen — its centre is measured against that page's fitted size. So the
+    /// page has to be announced first, or the framing lands against the page the pilot just left.
+    /// </summary>
+    [Fact]
+    public void SelectSection_AnnouncesThePageBeforeTheFraming()
+    {
+        var vm = Load(("A", ["a1"]), ("B", ["b1"]));
+        vm.SelectSectionCommand.Execute(vm.Sections[1]);
+        vm.CurrentFraming = Zoomed;
+        vm.SelectSectionCommand.Execute(vm.Sections[0]);
+
+        var announced = PropertiesAnnouncedDuring(vm, () => vm.SelectSectionCommand.Execute(vm.Sections[1]));
+
+        // Both asserted present before their order is compared: IndexOf answers -1 for a name that was
+        // never announced, and -1 is less than everything — so the comparison alone would hold even if
+        // the screen stopped announcing the page at all.
+        Assert.Contains(PageAnnouncement, announced);
+        Assert.Contains(FramingAnnouncement, announced);
+        Assert.True(
+            announced.IndexOf(PageAnnouncement) < announced.IndexOf(FramingAnnouncement),
+            $"page must be announced before framing, got: {string.Join(", ", announced)}");
+    }
+
     [Fact]
     public void PageDots_LightTheDotForThePageOnScreen()
     {
@@ -202,18 +287,22 @@ public class KneeboardViewModelTests
     // ── the screen's surface ───────────────────────────────────────────────────
     //
     // The only place in this file that names how the screen exposes where the pilot is in the
-    // document. Every assertion about the page, the dots or the highlighted tab goes through the
-    // three accessors, so when that surface changes, this is the one place that changes with it.
+    // document. Every assertion about the page, the dots, the highlighted tab or the framing goes
+    // through the accessors below, so when that surface changes, this is the one place that changes
+    // with it.
     //
-    // AnnouncesPage is the other half of the same surface: two tests observe what the screen
-    // publishes rather than what it holds, and a notification can only be recognised by name. It
-    // lives here for the same reason the accessors do.
+    // The announcement names are the other half of the same surface: some tests observe what the
+    // screen publishes rather than what it holds, and a notification can only be recognised by name.
+    // They live here for the same reason the accessors do.
 
     /// <summary>The page on screen, decoded — what the image view is showing.</summary>
     private static string CurrentPage(KneeboardViewModel vm) => Decode(vm.CurrentPage);
 
     /// <summary>One dot per page of the section on screen, lit for the page the pilot is on.</summary>
     private static IReadOnlyList<bool> PageDots(KneeboardViewModel vm) => vm.CurrentPageDots;
+
+    /// <summary>How the section on screen is framed — what the image view is zoomed and panned to.</summary>
+    private static Framing CurrentFraming(KneeboardViewModel vm) => vm.CurrentFraming;
 
     /// <summary>The tab bar's highlight, one flag per tab.</summary>
     private static IReadOnlyList<bool> SelectedTabs(KneeboardViewModel vm) =>
@@ -223,7 +312,16 @@ public class KneeboardViewModelTests
     private static bool AnnouncesPage(PropertyChangedEventArgs e) =>
         e.PropertyName is nameof(KneeboardViewModel.CurrentPage) or nameof(KneeboardViewModel.CurrentPageDots);
 
+    /// <summary>The notification on which the image view re-reads the page to show.</summary>
+    private static readonly string PageAnnouncement = nameof(KneeboardViewModel.CurrentPage);
+
+    /// <summary>The notification on which the image view re-reads how to frame that page.</summary>
+    private static readonly string FramingAnnouncement = nameof(KneeboardViewModel.CurrentFraming);
+
     // ── helpers ────────────────────────────────────────────────────────────────
+
+    /// <summary>Zoomed well in, reading the upper left of the page — any framing that isn't the fit.</summary>
+    private static readonly Framing Zoomed = new(2.5, 0.2, 0.3);
 
     private static KneeboardViewModel Load(params (string Label, string[] Pages)[] sections)
     {
@@ -264,6 +362,30 @@ public class KneeboardViewModelTests
         }
 
         return published;
+    }
+
+    /// <summary>Every property the screen announced while <paramref name="act"/> ran, in order.</summary>
+    private static List<string> PropertiesAnnouncedDuring(KneeboardViewModel vm, Action act)
+    {
+        var announced = new List<string>();
+
+        void Record(object? _, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is not null)
+                announced.Add(e.PropertyName);
+        }
+
+        vm.PropertyChanged += Record;
+        try
+        {
+            act();
+        }
+        finally
+        {
+            vm.PropertyChanged -= Record;
+        }
+
+        return announced;
     }
 
     private static KneeboardDocument DocumentFor((string Label, string[] Pages)[] sections) => new()

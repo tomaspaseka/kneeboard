@@ -4,34 +4,42 @@ namespace Kneeboard.ViewModels;
 
 /// <summary>
 /// The material of an open document as the pilot has it in front of them: every section's pages, in
-/// order, together with the page they are on in each section.
+/// order, together with the page they are on and how they have it framed in each section.
 /// </summary>
 public sealed record Binder
 {
     /// <summary>A binder with nothing in it: no sections, and so no section selected.</summary>
-    public static readonly Binder Empty = new([], [], -1);
+    public static readonly Binder Empty = new([], [], [], -1);
 
     // Aligned by section index, and only ever built together in Of: _currentPages[i] is the page the
-    // pilot is on in _sections[i]. Nothing here can change either length — SetItem cannot — so the
-    // two stay the same length for the life of the binder.
+    // pilot is on in _sections[i] and _framings[i] is how they have it framed. Nothing here can
+    // change any length — SetItem cannot — so the three stay the same length for the binder's life.
     private readonly ImmutableArray<ImmutableArray<ReadOnlyMemory<byte>>> _sections;
     private readonly ImmutableArray<int> _currentPages;
+    private readonly ImmutableArray<Framing> _framings;
 
     private Binder(
         ImmutableArray<ImmutableArray<ReadOnlyMemory<byte>>> sections,
         ImmutableArray<int> currentPages,
+        ImmutableArray<Framing> framings,
         int selectedSectionIndex)
     {
         _sections = sections;
         _currentPages = currentPages;
+        _framings = framings;
         SelectedSectionIndex = selectedSectionIndex;
     }
 
-    /// <summary>A binder over the given sections' pages, open at the first page of the first section.</summary>
+    /// <summary>
+    /// A binder over the given sections' pages, open at the first page of the first section with
+    /// every section fitted to the screen.
+    /// </summary>
     public static Binder Of(IEnumerable<IReadOnlyList<ReadOnlyMemory<byte>>> pagesPerSection)
     {
         var sections = pagesPerSection.Select(ImmutableArray.CreateRange).ToImmutableArray();
-        return sections.IsEmpty ? Empty : new Binder(sections, [.. sections.Select(_ => 0)], 0);
+        return sections.IsEmpty
+            ? Empty
+            : new Binder(sections, [.. sections.Select(_ => 0)], [.. sections.Select(_ => Framing.Fit)], 0);
     }
 
     public int SelectedSectionIndex { get; }
@@ -45,6 +53,10 @@ public sealed record Binder
             return pages.IsEmpty ? ReadOnlyMemory<byte>.Empty : pages[CurrentPageIndex];
         }
     }
+
+    /// <summary>How the pilot has the selected section framed; the fit when there is nothing open.</summary>
+    public Framing CurrentFraming =>
+        SelectedSectionIndex < 0 ? Framing.Fit : _framings[SelectedSectionIndex];
 
     /// <summary>One entry per page of the selected section, true for the page on screen.</summary>
     public IReadOnlyList<bool> PageDots
@@ -63,7 +75,17 @@ public sealed record Binder
     public Binder Select(int sectionIndex) =>
         sectionIndex < 0 || sectionIndex >= _sections.Length || sectionIndex == SelectedSectionIndex
             ? this
-            : new Binder(_sections, _currentPages, sectionIndex);
+            : new Binder(_sections, _currentPages, _framings, sectionIndex);
+
+    /// <summary>
+    /// Records how the pilot has framed the selected section. Nothing open, and the framing the
+    /// section already has, are both no-ops — the second because the platform view reports the framing
+    /// it was handed back as every gesture settles, and that echo is not a change.
+    /// </summary>
+    public Binder Framed(Framing framing) =>
+        SelectedSectionIndex < 0 || framing == CurrentFraming
+            ? this
+            : new Binder(_sections, _currentPages, _framings.SetItem(SelectedSectionIndex, framing), SelectedSectionIndex);
 
     /// <summary>Turns to the next page of the selected section, or stays on the last one.</summary>
     public Binder Next() => TurnTo(CurrentPageIndex + 1);
@@ -89,9 +111,17 @@ public sealed record Binder
         // equality is reference equality of its backing array and SetItem allocates
         // unconditionally, so a rebuilt no-op would compare unequal and cost a needless
         // notification on every turn at either end of a section.
+        // A turn returns the section to the fit: the pilot pages to read a new page whole, not to
+        // arrive at whatever corner of it the last page's framing happened to point at. Only on a real
+        // turn — the short-circuit above means a tap at either end of a section keeps the framing,
+        // because nothing was turned.
         return clamped == CurrentPageIndex
             ? this
-            : new Binder(_sections, _currentPages.SetItem(SelectedSectionIndex, clamped), SelectedSectionIndex);
+            : new Binder(
+                _sections,
+                _currentPages.SetItem(SelectedSectionIndex, clamped),
+                _framings.SetItem(SelectedSectionIndex, Framing.Fit),
+                SelectedSectionIndex);
     }
 
     private ImmutableArray<ReadOnlyMemory<byte>> SelectedPages =>

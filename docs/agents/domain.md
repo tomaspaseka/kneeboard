@@ -6,7 +6,7 @@ codebase.
 ## Before exploring, read these
 
 - **`CONTEXT.md`** at the repo root — the domain glossary. Defines Document, Section, Content
-  source, Page, Section source, Rasterizer and Page navigation zone.
+  source, Page, Section source, Rasterizer, Binder, Framing and Page navigation zone.
 - **`docs/adr/`** — read the ADRs that touch the area you're about to work in.
 - **`arch/`** — `arch/overview.md` for the architecture, `arch/kneeboard-format.md` for the on-disk
   `.kneeboard` format. `CONTEXT.md` links into both.
