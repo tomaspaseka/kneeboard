@@ -21,9 +21,10 @@ Modelled as `ContentSource`, with `PdfSource` and `ImageFolderSource` subtypes.
 
 ## Page
 
-One full-screen image the pilot looks at. Pages are ordered within a section and addressed by
-index. A page **is encoded image bytes** — deliberately not a file path. Nothing above the section
-source knows whether a page ever existed on disk.
+One image the pilot looks at, shown on its own — never two side by side, and never cropped to fill
+the screen. Pages are ordered within a section and addressed by index. A page **is encoded image
+bytes** — deliberately not a file path. Nothing above the section source knows whether a page ever
+existed on disk.
 
 ## Section source
 
@@ -46,3 +47,10 @@ nothing outside the section source knows that rasterizing happens at all.
 A page that fails to rasterize is reported as failed rather than dropped, and the section source
 substitutes a placeholder image. Page count therefore always matches the original document: a
 pilot sees that a page is missing instead of silently flying with a short one.
+
+## Page navigation zone
+
+The part of the screen where a tap pages the section: the outer fifth of the page on each side, plus
+any empty space beyond it out to the screen edge. The middle three fifths of the page is not a
+navigation zone — that is left to zoom and pan. Measured against the page as currently drawn, so
+zooming moves the zones with it. Not "tap zone" and not "nav zone".

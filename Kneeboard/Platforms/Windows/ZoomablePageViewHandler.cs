@@ -23,9 +23,14 @@ public class ZoomablePageViewHandler : ViewHandler<ZoomablePageView, ScrollViewe
 
     protected override ScrollViewer CreatePlatformView()
     {
+        // Centred, not stretched: a uniformly-stretched Image arranges to its fitted size rather
+        // than its slot, and the default Stretch alignment drops that fitted content at 0,0 — which
+        // pins a portrait page to the left of a landscape screen.
         _image = new Microsoft.UI.Xaml.Controls.Image
         {
             Stretch = Microsoft.UI.Xaml.Media.Stretch.Uniform,
+            HorizontalAlignment = Microsoft.UI.Xaml.HorizontalAlignment.Center,
+            VerticalAlignment = Microsoft.UI.Xaml.VerticalAlignment.Center,
         };
 
         var scrollViewer = new ScrollViewer
@@ -37,6 +42,11 @@ public class ZoomablePageViewHandler : ViewHandler<ZoomablePageView, ScrollViewe
             VerticalScrollBarVisibility = Microsoft.UI.Xaml.Controls.ScrollBarVisibility.Hidden,
             MinZoomFactor = 1.0f,
             MaxZoomFactor = 3.0f,
+            // Paired with the image's own alignment above: this centres the page within the
+            // viewport, that centres it within whatever slot the presenter hands it. Which of the
+            // two has the spare room depends on the presenter, and only one of them needs it.
+            HorizontalContentAlignment = Microsoft.UI.Xaml.HorizontalAlignment.Center,
+            VerticalContentAlignment = Microsoft.UI.Xaml.VerticalAlignment.Center,
             Content = _image,
         };
 
@@ -63,14 +73,20 @@ public class ZoomablePageViewHandler : ViewHandler<ZoomablePageView, ScrollViewe
 
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        _image.Width = e.NewSize.Width;
-        _image.Height = e.NewSize.Height;
+        // Maximums, not exact sizes: the ScrollViewer measures its content unbounded, so without a
+        // cap the page would lay out at its full bitmap size instead of fitting the screen. Capping
+        // rather than fixing leaves the page free to arrange smaller than the screen and centre.
+        _image.MaxWidth = e.NewSize.Width;
+        _image.MaxHeight = e.NewSize.Height;
         PlatformView.ChangeView(0, 0, 1.0f, disableAnimation: true);
     }
 
     private void OnTapped(object sender, TappedRoutedEventArgs e)
     {
-        _pendingTapPos = e.GetPosition(PlatformView);
+        // Relative to the page, not the screen: WinUI then does the zoom and scroll arithmetic for
+        // us, over the same transform that makes a control inside a zoomed ScrollViewer clickable in
+        // the right place. Taps on the empty space around the page arrive as negative or overlarge.
+        _pendingTapPos = e.GetPosition(_image);
         if (_tapTimer is not null)
         {
             _tapTimer.Stop();
@@ -87,11 +103,17 @@ public class ZoomablePageViewHandler : ViewHandler<ZoomablePageView, ScrollViewe
         _tapTimer?.Stop();
         _tapTimer = null;
 
-        var width = PlatformView.ActualWidth;
-        if (_pendingTapPos.X < width * 0.2)
-            VirtualView?.PreviousPageCommand?.Execute(null);
-        else if (_pendingTapPos.X > width * 0.8)
-            VirtualView?.NextPageCommand?.Execute(null);
+        // Both the tap and the width are in the page's own coordinates, so the zoom factor cancels
+        // out and the zones stay a fifth of the page at any magnification.
+        switch (PageNavigationZones.Resolve(_pendingTapPos.X, _image.ActualWidth))
+        {
+            case PageNavigationZone.Previous:
+                VirtualView?.PreviousPageCommand?.Execute(null);
+                break;
+            case PageNavigationZone.Next:
+                VirtualView?.NextPageCommand?.Execute(null);
+                break;
+        }
     }
 
     private void OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
