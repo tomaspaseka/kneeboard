@@ -182,7 +182,119 @@ public class BinderTests
         Assert.Same(Binder.Empty, Binder.Empty.Previous());
     }
 
+    // ── framing ─────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void Of_OpensEverySectionFittedToTheScreen()
+    {
+        var binder = BinderOf(["a1"], ["b1"]);
+
+        Assert.Equal(Framing.Fit, binder.CurrentFraming);
+        Assert.Equal(Framing.Fit, binder.Select(1).CurrentFraming);
+    }
+
+    [Fact]
+    public void Framed_RecordsHowThePilotFramedTheSection()
+    {
+        var binder = BinderOf(["a1"]);
+
+        Assert.Equal(Zoomed, binder.Framed(Zoomed).CurrentFraming);
+    }
+
+    [Fact]
+    public void Select_ASectionAlreadyRead_RestoresHowItWasFramed()
+    {
+        var binder = BinderOf(["a1"], ["b1"])
+            .Select(1).Framed(Zoomed) // B zoomed in on a corner
+            .Select(0)                // away to A
+            .Select(1);               // and back
+
+        Assert.Equal(Zoomed, binder.CurrentFraming);
+    }
+
+    [Fact]
+    public void Framed_LeavesEveryOtherSectionFitted()
+    {
+        var binder = BinderOf(["a1"], ["b1"]).Select(1).Framed(Zoomed);
+
+        Assert.Equal(Framing.Fit, binder.Select(0).CurrentFraming);
+    }
+
+    [Fact]
+    public void Next_ReturnsTheSectionToTheFit()
+    {
+        var binder = BinderOf(["p1", "p2"]).Framed(Zoomed);
+
+        Assert.Equal(Framing.Fit, binder.Next().CurrentFraming);
+    }
+
+    [Fact]
+    public void Previous_ReturnsTheSectionToTheFit()
+    {
+        var binder = BinderOf(["p1", "p2"]).Next().Framed(Zoomed);
+
+        Assert.Equal(Framing.Fit, binder.Previous().CurrentFraming);
+    }
+
+    /// <summary>
+    /// A tap on the page edge at the end of a section turns nothing, so it must not throw the pilot's
+    /// framing away either — the same no-op the paging tests pin by reference identity.
+    /// </summary>
+    [Fact]
+    public void Next_OnTheLastPage_KeepsTheFraming()
+    {
+        var binder = BinderOf(["p1"]).Framed(Zoomed);
+
+        Assert.Equal(Zoomed, binder.Next().CurrentFraming);
+    }
+
+    [Fact]
+    public void Previous_OnTheFirstPage_KeepsTheFraming()
+    {
+        var binder = BinderOf(["p1", "p2"]).Framed(Zoomed);
+
+        Assert.Equal(Zoomed, binder.Previous().CurrentFraming);
+    }
+
+    [Fact]
+    public void Next_LeavesEveryOtherSectionsFramingAlone()
+    {
+        var binder = BinderOf(["a1", "a2"], ["b1", "b2"])
+            .Select(1).Framed(Zoomed) // B zoomed in
+            .Select(0).Next();        // page forward through A
+
+        Assert.Equal(Zoomed, binder.Select(1).CurrentFraming);
+    }
+
+    /// <summary>
+    /// Reference identity, for the reason paging has it and one more: the platform view reports the
+    /// framing it was just given back as each gesture settles, so an unchanged framing arrives
+    /// constantly. Rebuilding for that echo would publish a notification every time.
+    /// </summary>
+    [Fact]
+    public void Framed_WithTheFramingItAlreadyHas_ReturnsTheSameInstance()
+    {
+        var binder = BinderOf(["p1"]).Framed(Zoomed);
+
+        Assert.Same(binder, binder.Framed(Zoomed));
+    }
+
+    [Fact]
+    public void Framed_AFittedSectionWithTheFit_ReturnsTheSameInstance()
+    {
+        var binder = BinderOf(["p1"]);
+
+        Assert.Same(binder, binder.Framed(Framing.Fit));
+    }
+
+    [Fact]
+    public void Empty_HasNothingToFrame() =>
+        Assert.Same(Binder.Empty, Binder.Empty.Framed(Zoomed));
+
     // ── helpers ─────────────────────────────────────────────────────────────────
+
+    /// <summary>Zoomed well in, reading the upper left of the page — any framing that isn't the fit.</summary>
+    private static readonly Framing Zoomed = new(2.5, 0.2, 0.3);
 
     /// <summary>A binder over the given sections, each written as its pages' contents.</summary>
     private static Binder BinderOf(params string[][] sections) =>

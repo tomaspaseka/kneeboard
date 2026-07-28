@@ -75,6 +75,7 @@
 
             <controls:ZoomablePageView
                 PageImage="{Binding CurrentPage}"
+                Framing="{Binding CurrentFraming}"
                 PreviousPageCommand="{Binding PreviousPageCommand}"
                 NextPageCommand="{Binding NextPageCommand}"
                 HorizontalOptions="Fill"
