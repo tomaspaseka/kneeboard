@@ -27,10 +27,11 @@ foreach ($p in @("$root\Kneeboard\AppPackages", "$root\Kneeboard\obj", "$root\Kn
     if (Test-Path $p) { Remove-Item $p -Recurse -Force }
 }
 
-# Two-step publish: restore without RID first (workaround for MAUI Mono-restore bug),
-# then publish self-contained without re-restoring.
+# Two-step publish: restore with a single TFM first (workaround for MAUI Mono-restore bug
+# in multi-TFM projects), passing the win-x64 RID so the self-contained runtime pack is
+# resolved now — publish below runs with --no-restore and needs it already present.
 Write-Host "Restoring packages..."
-dotnet restore "$root\Kneeboard" -p:TargetFramework=net10.0-windows10.0.19041.0
+dotnet restore "$root\Kneeboard" -p:TargetFramework=net10.0-windows10.0.19041.0 -p:RuntimeIdentifier=win-x64 -p:SelfContained=true -p:PublishReadyToRun=true
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "Running dotnet publish..."
