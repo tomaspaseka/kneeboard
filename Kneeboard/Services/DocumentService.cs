@@ -1,9 +1,10 @@
+using System.Diagnostics;
 using System.Text.Json;
 using Kneeboard.Models;
 
 namespace Kneeboard.Services;
 
-public class DocumentService : IDocumentService
+public class DocumentService(IRecentDocumentsService recentDocumentsService) : IDocumentService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
@@ -38,9 +39,11 @@ public class DocumentService : IDocumentService
             ResolveRelativePaths(document, baseDir);
 
             var error = Validate(document);
-            return error is null
-                ? DocumentLoadResult.Succeeded(document)
-                : DocumentLoadResult.Failed(error);
+            if (error is not null)
+                return DocumentLoadResult.Failed(error);
+
+            await RecordOpenedAsync(document, filePath);
+            return DocumentLoadResult.Succeeded(document);
         }
         catch (JsonException)
         {
@@ -53,6 +56,25 @@ public class DocumentService : IDocumentService
         catch (Exception ex)
         {
             return DocumentLoadResult.Failed($"Could not open file: {ex.Message}");
+        }
+    }
+
+    // A recents-store hiccup must never turn an otherwise-successful load into a reported failure;
+    // it's swallowed (and logged for diagnosis) rather than surfaced to the user.
+    private async Task RecordOpenedAsync(KneeboardDocument document, string filePath)
+    {
+        try
+        {
+            var title = string.IsNullOrWhiteSpace(document.Title)
+                ? Path.GetFileNameWithoutExtension(filePath)
+                : document.Title;
+
+            await recentDocumentsService.RecordOpenedAsync(
+                new RecentDocument(filePath, title, DateTimeOffset.UtcNow));
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Failed to record recent document '{filePath}': {ex}");
         }
     }
 
