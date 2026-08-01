@@ -32,6 +32,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<IDocumentService, DocumentService>();
         builder.Services.AddSingleton<INavigationService, NavigationService>();
         builder.Services.AddSingleton<ISectionSource, SectionSource>();
+        builder.Services.AddSingleton<IKeyValueStore, PreferencesStore>();
+        builder.Services.AddSingleton<IRecentDocumentsService, RecentDocumentsService>();
 
 #if WINDOWS
         builder.Services.AddSingleton<IPdfRasterizer, Platforms.Windows.PdfRasterizer>();
