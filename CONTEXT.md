@@ -19,6 +19,14 @@ Where a section's material comes from, and the only thing that varies between ki
 Two kinds today: a **pdf** (one file) and an **images** folder (many files, ordered by filename).
 Modelled as `ContentSource`, with `PdfSource` and `ImageFolderSource` subtypes.
 
+## Global Tab
+
+An app-owned tab: defined once in settings rather than inside a document, so it shows up
+regardless of which `.kneeboard` file is open. Holds the same two kinds of content source a
+Section can hold — a **pdf** or an **images** folder — via the same `ContentSource` type.
+Modelled as `GlobalTabSetting`, with an explicit label, order and enabled/disabled flag, and
+persisted through `IGlobalTabsSettingsService`. Up to three at a time.
+
 ## Page
 
 One image the pilot looks at, shown on its own — never two side by side, and never cropped to fill
