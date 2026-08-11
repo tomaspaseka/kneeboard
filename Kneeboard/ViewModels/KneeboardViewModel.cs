@@ -10,11 +10,18 @@ public partial class KneeboardViewModel : BaseViewModel
 {
     private readonly IDocumentService _documentService;
     private readonly ISectionSource _sectionSource;
+    private readonly IGlobalTabsSettingsService _globalTabsSettingsService;
 
     // Everything about where the pilot is in the document, in one field. No notification can catch the
-    // screen holding a page from one section and a framing or a highlighted tab from another, because
+    // screen holding a page from one tab and a framing or a highlighted tab from another, because
     // there is no second field to disagree with — which is the whole reason paging lives in a binder.
     private Binder _binder = Binder.Empty;
+
+    // Sections followed by enabled Global Tabs, in that order — the same order their pages were handed
+    // to Binder.Of, so index i here is exactly the tab Binder.SelectedTabIndex == i means. Kept
+    // separately from Sections/GlobalTabs because the screen needs those as two distinct bindable
+    // groups, but the binder only knows one combined index space.
+    private List<TabViewModel> _tabs = [];
 
     [ObservableProperty]
     public partial KneeboardDocument? Document { get; set; }
@@ -29,16 +36,19 @@ public partial class KneeboardViewModel : BaseViewModel
     public partial List<SectionViewModel> Sections { get; set; }
 
     [ObservableProperty]
+    public partial List<GlobalTabViewModel> GlobalTabs { get; set; }
+
+    [ObservableProperty]
     public partial bool IsLoading { get; set; }
 
     /// <summary>The page on screen.</summary>
     public ReadOnlyMemory<byte> CurrentPage => _binder.CurrentPage;
 
-    /// <summary>One entry per page of the section on screen, lit for the page the pilot is on.</summary>
+    /// <summary>One entry per page of the tab on screen, lit for the page the pilot is on.</summary>
     public IReadOnlyList<bool> CurrentPageDots => _binder.PageDots;
 
     /// <summary>
-    /// How the section on screen is framed. Two-way: the image view reads its zoom and pan from here,
+    /// How the tab on screen is framed. Two-way: the image view reads its zoom and pan from here,
     /// and reports the pilot's own gestures back through the setter as each one settles.
     /// </summary>
     public Framing CurrentFraming
@@ -47,11 +57,16 @@ public partial class KneeboardViewModel : BaseViewModel
         set => Publish(_binder.Framed(value));
     }
 
-    public KneeboardViewModel(IDocumentService documentService, ISectionSource sectionSource)
+    public KneeboardViewModel(
+        IDocumentService documentService,
+        ISectionSource sectionSource,
+        IGlobalTabsSettingsService globalTabsSettingsService)
     {
         _documentService = documentService;
         _sectionSource = sectionSource;
+        _globalTabsSettingsService = globalTabsSettingsService;
         Sections = [];
+        GlobalTabs = [];
     }
 
     partial void OnDocumentChanged(KneeboardDocument? value)
@@ -72,20 +87,41 @@ public partial class KneeboardViewModel : BaseViewModel
                 .Select(s => new SectionViewModel(s) { SelectCommand = SelectSectionCommand })
                 .ToList();
 
-            var pages = new List<IReadOnlyList<ReadOnlyMemory<byte>>>(sections.Count);
+            var allGlobalTabs = await _globalTabsSettingsService.GetTabsAsync();
+            var globalTabs = allGlobalTabs
+                .Where(t => t.Enabled)
+                .OrderBy(t => t.Order)
+                .Select(t => new GlobalTabViewModel(t) { SelectCommand = SelectSectionCommand })
+                .ToList();
+
+            // Sections first, then enabled Global Tabs in configured order — this is the combined
+            // index space Binder.SelectedTabIndex indexes into, so it has to match the order their
+            // pages are handed to Binder.Of below exactly.
+            var tabs = new List<TabViewModel>(sections.Count + globalTabs.Count);
+            tabs.AddRange(sections);
+            tabs.AddRange(globalTabs);
+
+            var pages = new List<IReadOnlyList<ReadOnlyMemory<byte>>>(tabs.Count);
             foreach (var section in sections)
                 pages.Add(await _sectionSource.GetPagesAsync(section.Section.Source));
+            foreach (var globalTab in globalTabs)
+                pages.Add(await _sectionSource.GetPagesAsync(globalTab.Tab.Source));
 
             // Tabs first: Publish lights one of them, so they have to exist by then.
             Sections = sections;
+            GlobalTabs = globalTabs;
+            _tabs = tabs;
             Publish(Binder.Of(pages));
         }
         catch (Exception ex)
         {
             // OnDocumentChanged starts this without awaiting, so an escaping exception would go
-            // unobserved and leave the kneeboard silently empty.
+            // unobserved and leave the kneeboard silently empty. No special-casing by tab origin: a
+            // broken Global Tab source fails the whole load exactly like a broken Section would.
             ErrorMessage = ex.Message;
             Sections = [];
+            GlobalTabs = [];
+            _tabs = [];
             Publish(Binder.Empty);
         }
         finally
@@ -107,15 +143,15 @@ public partial class KneeboardViewModel : BaseViewModel
     private void Publish(Binder next)
     {
         // Reference identity, not equality: a binder returns itself for anything that changed nothing,
-        // and that is the signal. Turning at the end of a section, re-tapping the open tab and the
+        // and that is the signal. Turning at the end of a tab, re-tapping the open tab and the
         // image view echoing back the framing it was just handed all arrive here as the same instance.
         if (ReferenceEquals(_binder, next))
             return;
 
         _binder = next;
 
-        for (var i = 0; i < Sections.Count; i++)
-            Sections[i].IsSelected = i == next.SelectedSectionIndex;
+        for (var i = 0; i < _tabs.Count; i++)
+            _tabs[i].IsSelected = i == next.SelectedTabIndex;
 
         OnPropertyChanged(nameof(CurrentPage));
         OnPropertyChanged(nameof(CurrentPageDots));
@@ -123,9 +159,9 @@ public partial class KneeboardViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private void SelectSection(SectionViewModel section) =>
+    private void SelectSection(TabViewModel tab) =>
         // A tab that isn't in the list indexes to -1, which the binder treats as nothing to select.
-        Publish(_binder.Select(Sections.IndexOf(section)));
+        Publish(_binder.Select(_tabs.IndexOf(tab)));
 
     [RelayCommand]
     private async Task OpenFileAsync()

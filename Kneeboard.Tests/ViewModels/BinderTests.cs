@@ -11,7 +11,7 @@ public class BinderTests
     {
         var binder = BinderOf(["a1", "a2"], ["b1"]);
 
-        Assert.Equal(0, binder.SelectedSectionIndex);
+        Assert.Equal(0, binder.SelectedTabIndex);
         Assert.Equal("a1", CurrentPage(binder));
     }
 
@@ -21,7 +21,7 @@ public class BinderTests
     [Fact]
     public void Empty_HasNoSelectedSection_NoDots_AndNoPage()
     {
-        Assert.Equal(-1, Binder.Empty.SelectedSectionIndex);
+        Assert.Equal(-1, Binder.Empty.SelectedTabIndex);
         Assert.Empty(Binder.Empty.PageDots);
         Assert.Empty(CurrentPage(Binder.Empty));
     }
@@ -88,7 +88,7 @@ public class BinderTests
 
         var selected = binder.Select(1);
 
-        Assert.Equal(1, selected.SelectedSectionIndex);
+        Assert.Equal(1, selected.SelectedTabIndex);
         Assert.Equal("b1", CurrentPage(selected));
     }
 

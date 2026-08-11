@@ -20,9 +20,9 @@
 
     <Grid RowDefinitions="Auto,*,Auto">
 
-        <!-- Tab bar -->
+        <!-- Tab bar: Sections, then Global Tabs, then the title/open-file group, left to right. -->
         <Grid Grid.Row="0"
-              ColumnDefinitions="*,Auto"
+              ColumnDefinitions="Auto,Auto,*"
               BackgroundColor="#1F2937">
 
             <HorizontalStackLayout Grid.Column="0"
@@ -53,6 +53,34 @@
             </HorizontalStackLayout>
 
             <HorizontalStackLayout Grid.Column="1"
+                                   BindableLayout.ItemsSource="{Binding GlobalTabs}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:GlobalTabViewModel">
+                        <Button Text="{Binding Title}"
+                                BackgroundColor="Transparent"
+                                TextColor="#6B7280"
+                                FontSize="12"
+                                FontAttributes="Bold"
+                                CharacterSpacing="0.5"
+                                Padding="20,10"
+                                BorderWidth="0"
+                                Command="{Binding SelectCommand}"
+                                CommandParameter="{Binding .}">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button"
+                                             Binding="{Binding IsSelected}"
+                                             Value="True">
+                                    <Setter Property="TextColor" Value="White" />
+                                    <Setter Property="BackgroundColor" Value="#E94560" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout Grid.Column="2"
+                                   HorizontalOptions="End"
                                    VerticalOptions="Center"
                                    Spacing="8"
                                    Padding="0,0,12,0">

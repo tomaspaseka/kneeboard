@@ -8,10 +8,17 @@ changes in the code too — that's the point of the file.
 A `.kneeboard` file: one mission's worth of material. JSON; see
 [`arch/kneeboard-format.md`](arch/kneeboard-format.md). Exactly one document is open at a time.
 
+## Tab
+
+An ordered slot in the tab bar. Two kinds today: a **Section**, owned by the open document, and a
+**Global Tab**, owned by the app. Both are read the same way, through `ISectionSource`, and both
+feed the same `Binder` — nothing downstream of the tab bar needs to know which kind a given tab is,
+only where it sits in the order.
+
 ## Section
 
-A named tab within a document — "Mission Datacard", "Airfields Map". Has an id, a label, and
-exactly one content source.
+A kind of `Tab`, owned by the document: a named tab within a document — "Mission Datacard",
+"Airfields Map". Has an id, a label, and exactly one content source.
 
 ## Content source
 
@@ -21,16 +28,17 @@ Modelled as `ContentSource`, with `PdfSource` and `ImageFolderSource` subtypes.
 
 ## Global Tab
 
-An app-owned tab: defined once in settings rather than inside a document, so it shows up
-regardless of which `.kneeboard` file is open. Holds the same two kinds of content source a
-Section can hold — a **pdf** or an **images** folder — via the same `ContentSource` type.
+The other kind of `Tab`: an app-owned tab, defined once in settings rather than inside a document,
+so it shows up regardless of which `.kneeboard` file is open. Holds the same two kinds of content
+source a Section can hold — a **pdf** or an **images** folder — via the same `ContentSource` type.
 Modelled as `GlobalTabSetting`, with an explicit label, order and enabled/disabled flag, and
-persisted through `IGlobalTabsSettingsService`. Up to three at a time.
+persisted through `IGlobalTabsSettingsService`. Up to three at a time. In the tab bar it renders
+after the document's Sections and before the document title/open-file controls.
 
 ## Page
 
 One image the pilot looks at, shown on its own — never two side by side, and never cropped to fill
-the screen. Pages are ordered within a section and addressed by index. A page **is encoded image
+the screen. Pages are ordered within a tab and addressed by index. A page **is encoded image
 bytes** — deliberately not a file path. Nothing above the section source knows whether a page ever
 existed on disk.
 
@@ -58,22 +66,23 @@ pilot sees that a page is missing instead of silently flying with a short one.
 
 ## Binder
 
-The material of an open document as the pilot has it in front of them: every section's pages, the page
-they are on in each, and how each is framed. Immutable (`Binder`) — turning, selecting and framing each
-return a new binder, and one that changes nothing returns itself. It is the only place that knows where
-the pilot is, so nothing can hold two answers at once.
+The material of an open document as the pilot has it in front of them: every tab's pages, the page
+they are on in each, and how each is framed — Sections and Global Tabs alike, indistinguishable once
+their pages reach the binder. Immutable (`Binder`) — turning, selecting and framing each return a new
+binder, and one that changes nothing returns itself. It is the only place that knows where the pilot
+is, so nothing can hold two answers at once.
 
 ## Framing
 
 How far into a page the pilot is zoomed, and which point of the page sits at the centre of the screen.
-Held per **section**, not per page: switch tabs and come back and the framing is restored, but turning a
+Held per **tab**, not per page: switch tabs and come back and the framing is restored, but turning a
 page clears it back to the fit. Expressed relative to the page rather than in screen pixels, so it means
 the same thing at any window size and survives a resize untouched. Not "zoom level" and not "viewport" —
 both name only half of it.
 
 ## Page navigation zone
 
-The part of the screen where a tap pages the section: the outer fifth of the page on each side, plus
+The part of the screen where a tap pages the tab: the outer fifth of the page on each side, plus
 any empty space beyond it out to the screen edge. The middle three fifths of the page is not a
 navigation zone — that is left to zoom and pan. Measured in the page's own coordinates, so the zones are
 attached to the page and not to the screen: zooming carries them out of view with the rest of the page,
