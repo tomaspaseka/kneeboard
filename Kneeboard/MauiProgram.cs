@@ -47,6 +47,8 @@ public static class MauiProgram
         builder.Services.AddTransient<WelcomePage>();
         builder.Services.AddTransient<KneeboardViewModel>();
         builder.Services.AddTransient<KneeboardPage>();
+        builder.Services.AddTransient<SettingsViewModel>();
+        builder.Services.AddTransient<SettingsPage>();
 
         // Shell
         builder.Services.AddSingleton<AppShell>();

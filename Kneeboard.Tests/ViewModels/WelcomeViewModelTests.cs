@@ -121,6 +121,17 @@ public class WelcomeViewModelTests
         Assert.Contains(recent.Path, recentService.RemovedPaths);
     }
 
+    [Fact]
+    public async Task OpenSettings_NavigatesToSettings()
+    {
+        var vm = BuildVm(DocumentLoadResult.Cancelled());
+
+        await vm.OpenSettingsCommand.ExecuteAsync(null);
+
+        Assert.Single(_nav.Routes);
+        Assert.Equal("settings", _nav.Routes[0]);
+    }
+
     // ── test doubles ──────────────────────────────────────────────────────────
 
     private readonly SpyNavigationService _nav = new();

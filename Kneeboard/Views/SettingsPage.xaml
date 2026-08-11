@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:vm="clr-namespace:Kneeboard.ViewModels"
+             xmlns:models="clr-namespace:Kneeboard.Models"
+             xmlns:converters="clr-namespace:Kneeboard.Converters"
+             x:Class="Kneeboard.Views.SettingsPage"
+             x:Name="Root"
+             x:DataType="vm:SettingsViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#0D1117">
+
+    <ContentPage.Resources>
+        <converters:ContentSourceDescriptionConverter x:Key="ContentSourceDescriptionConverter" />
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Header -->
+        <Grid Grid.Row="0"
+              ColumnDefinitions="Auto,*"
+              BackgroundColor="#1F2937"
+              Padding="8,10">
+            <Button Grid.Column="0"
+                    Text="←"
+                    Command="{Binding BackCommand}"
+                    BackgroundColor="Transparent"
+                    TextColor="#E94560"
+                    FontSize="20"
+                    Padding="10,4"
+                    BorderWidth="0" />
+            <Label Grid.Column="1"
+                   Text="GLOBAL TABS"
+                   TextColor="#E94560"
+                   FontAttributes="Bold"
+                   FontSize="16"
+                   CharacterSpacing="1"
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20,16" Spacing="16">
+
+                <Label Text="Up to 3 Global Tabs show in every document's tab bar, regardless of which kneeboard file is open."
+                       TextColor="#6B7280"
+                       FontSize="12" />
+
+                <!-- Existing entries -->
+                <CollectionView ItemsSource="{Binding Tabs}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:GlobalTabSetting">
+                            <Border BackgroundColor="#1F2937"
+                                    Stroke="#374151"
+                                    StrokeThickness="1"
+                                    Margin="0,4"
+                                    Padding="14,10">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="6" />
+                                </Border.StrokeShape>
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto"
+                                      ColumnSpacing="6">
+
+                                    <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
+                                        <Label Text="{Binding Label}"
+                                               TextColor="White"
+                                               FontAttributes="Bold"
+                                               FontSize="14" />
+                                        <Label Text="{Binding Source, Converter={StaticResource ContentSourceDescriptionConverter}}"
+                                               TextColor="#6B7280"
+                                               FontSize="11"
+                                               LineBreakMode="TailTruncation" />
+                                    </VerticalStackLayout>
+
+                                    <Button Grid.Column="1"
+                                            Text="DISABLED"
+                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.ToggleEnabledCommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="#374151"
+                                            TextColor="#9CA3AF"
+                                            FontSize="10"
+                                            FontAttributes="Bold"
+                                            Padding="8,4"
+                                            BorderWidth="0"
+                                            VerticalOptions="Center">
+                                        <Button.Triggers>
+                                            <DataTrigger TargetType="Button"
+                                                         Binding="{Binding Enabled}"
+                                                         Value="True">
+                                                <Setter Property="Text" Value="ENABLED" />
+                                                <Setter Property="BackgroundColor" Value="#16A34A" />
+                                                <Setter Property="TextColor" Value="White" />
+                                            </DataTrigger>
+                                        </Button.Triggers>
+                                    </Button>
+
+                                    <Button Grid.Column="2"
+                                            Text="↑"
+                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.MoveUpCommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="Transparent"
+                                            TextColor="#9CA3AF"
+                                            Padding="8,4"
+                                            BorderWidth="0" />
+
+                                    <Button Grid.Column="3"
+                                            Text="↓"
+                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.MoveDownCommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="Transparent"
+                                            TextColor="#9CA3AF"
+                                            Padding="8,4"
+                                            BorderWidth="0" />
+
+                                    <Button Grid.Column="4"
+                                            Text="EDIT"
+                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.EditCommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="Transparent"
+                                            TextColor="#6B7280"
+                                            FontSize="11"
+                                            Padding="6,4"
+                                            BorderWidth="0" />
+
+                                    <Button Grid.Column="5"
+                                            Text="REMOVE"
+                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.RemoveCommand}"
+                                            CommandParameter="{Binding .}"
+                                            BackgroundColor="Transparent"
+                                            TextColor="#F87171"
+                                            FontSize="11"
+                                            Padding="6,4"
+                                            BorderWidth="0" />
+
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Label Text="The limit of 3 Global Tabs is reached. Remove one to add another."
+                       IsVisible="{Binding CanAddMore, Converter={toolkit:InvertedBoolConverter}}"
+                       TextColor="#F59E0B"
+                       FontSize="12"
+                       HorizontalTextAlignment="Center" />
+
+                <!-- Add / edit form -->
+                <Border BackgroundColor="#111827"
+                        Stroke="#374151"
+                        StrokeThickness="1"
+                        Padding="16"
+                        IsVisible="{Binding CanAddMore}">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="6" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="10">
+
+                        <Label Text="ADD A GLOBAL TAB"
+                               IsVisible="{Binding IsEditing, Converter={toolkit:InvertedBoolConverter}}"
+                               TextColor="#E94560"
+                               FontAttributes="Bold"
+                               FontSize="13"
+                               CharacterSpacing="0.5" />
+                        <Label Text="EDIT GLOBAL TAB"
+                               IsVisible="{Binding IsEditing}"
+                               TextColor="#E94560"
+                               FontAttributes="Bold"
+                               FontSize="13"
+                               CharacterSpacing="0.5" />
+
+                        <Entry Placeholder="Label, e.g. Charts"
+                               Text="{Binding NewLabel}"
+                               TextColor="White"
+                               PlaceholderColor="#6B7280" />
+
+                        <HorizontalStackLayout Spacing="8">
+                            <Button Text="PICK PDF…"
+                                    Command="{Binding PickPdfCommand}"
+                                    BackgroundColor="#374151"
+                                    TextColor="White"
+                                    FontSize="12"
+                                    Padding="12,8" />
+                            <Button Text="PICK IMAGE FOLDER…"
+                                    Command="{Binding PickImageFolderCommand}"
+                                    BackgroundColor="#374151"
+                                    TextColor="White"
+                                    FontSize="12"
+                                    Padding="12,8" />
+                        </HorizontalStackLayout>
+
+                        <Label Text="{Binding NewSourceDisplay}"
+                               IsVisible="{Binding NewSourceDisplay, Converter={toolkit:IsStringNotNullOrEmptyConverter}}"
+                               TextColor="#9CA3AF"
+                               FontSize="12" />
+
+                        <HorizontalStackLayout Spacing="8">
+                            <Button Text="SAVE"
+                                    Command="{Binding SaveCommand}"
+                                    IsEnabled="{Binding IsNotBusy}"
+                                    BackgroundColor="#E94560"
+                                    TextColor="White"
+                                    FontAttributes="Bold"
+                                    FontSize="12"
+                                    Padding="16,8" />
+                            <Button Text="CANCEL"
+                                    Command="{Binding CancelEditCommand}"
+                                    IsVisible="{Binding IsEditing}"
+                                    BackgroundColor="Transparent"
+                                    TextColor="#6B7280"
+                                    FontSize="12"
+                                    Padding="16,8" />
+                        </HorizontalStackLayout>
+
+                        <Label Text="{Binding ErrorMessage}"
+                               IsVisible="{Binding HasError}"
+                               TextColor="#F87171"
+                               FontSize="12" />
+
+                        <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                           IsVisible="{Binding IsBusy}"
+                                           Color="#E94560"
+                                           HorizontalOptions="Start" />
+
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+
+</ContentPage>

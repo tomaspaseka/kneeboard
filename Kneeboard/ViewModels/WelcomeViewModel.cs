@@ -74,6 +74,9 @@ public partial class WelcomeViewModel : BaseViewModel
     }
 
     [RelayCommand]
+    private async Task OpenSettingsAsync() => await _navigation.GoToAsync("settings");
+
+    [RelayCommand]
     private async Task OpenRecentAsync(RecentDocument doc)
     {
         ErrorMessage = null;
