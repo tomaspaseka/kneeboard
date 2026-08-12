@@ -6,7 +6,6 @@
              xmlns:models="clr-namespace:Kneeboard.Models"
              xmlns:converters="clr-namespace:Kneeboard.Converters"
              x:Class="Kneeboard.Views.SettingsPage"
-             x:Name="Root"
              x:DataType="vm:SettingsViewModel"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#0D1117">
@@ -75,8 +74,7 @@
 
                                     <Button Grid.Column="1"
                                             Text="DISABLED"
-                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.ToggleEnabledCommand}"
-                                            CommandParameter="{Binding .}"
+                                            Clicked="OnToggleEnabledClicked"
                                             BackgroundColor="#374151"
                                             TextColor="#9CA3AF"
                                             FontSize="10"
@@ -97,8 +95,7 @@
 
                                     <Button Grid.Column="2"
                                             Text="↑"
-                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.MoveUpCommand}"
-                                            CommandParameter="{Binding .}"
+                                            Clicked="OnMoveUpClicked"
                                             BackgroundColor="Transparent"
                                             TextColor="#9CA3AF"
                                             Padding="8,4"
@@ -106,8 +103,7 @@
 
                                     <Button Grid.Column="3"
                                             Text="↓"
-                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.MoveDownCommand}"
-                                            CommandParameter="{Binding .}"
+                                            Clicked="OnMoveDownClicked"
                                             BackgroundColor="Transparent"
                                             TextColor="#9CA3AF"
                                             Padding="8,4"
@@ -115,8 +111,7 @@
 
                                     <Button Grid.Column="4"
                                             Text="EDIT"
-                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.EditCommand}"
-                                            CommandParameter="{Binding .}"
+                                            Clicked="OnEditClicked"
                                             BackgroundColor="Transparent"
                                             TextColor="#6B7280"
                                             FontSize="11"
@@ -125,8 +120,7 @@
 
                                     <Button Grid.Column="5"
                                             Text="REMOVE"
-                                            Command="{Binding Source={x:Reference Root}, Path=BindingContext.RemoveCommand}"
-                                            CommandParameter="{Binding .}"
+                                            Clicked="OnRemoveClicked"
                                             BackgroundColor="Transparent"
                                             TextColor="#F87171"
                                             FontSize="11"

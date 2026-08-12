@@ -4,7 +4,6 @@
              xmlns:vm="clr-namespace:Kneeboard.ViewModels"
              xmlns:models="clr-namespace:Kneeboard.Models"
              x:Class="Kneeboard.Views.WelcomePage"
-             x:Name="Root"
              x:DataType="vm:WelcomeViewModel"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#111827">
@@ -62,8 +61,7 @@
                                 <RoundRectangle CornerRadius="6" />
                             </Border.StrokeShape>
                             <Border.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding Source={x:Reference Root}, Path=BindingContext.OpenRecentCommand}"
-                                                       CommandParameter="{Binding .}" />
+                                <TapGestureRecognizer Tapped="OnRecentDocumentTapped" />
                             </Border.GestureRecognizers>
                             <Label Text="{Binding Title}"
                                    TextColor="#E94560"
