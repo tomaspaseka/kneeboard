@@ -239,7 +239,10 @@ public class KneeboardViewModelTests
     [Fact]
     public void SetDocument_WhenSectionSourceThrows_SurfacesErrorAndFinishesLoading()
     {
-        var vm = new KneeboardViewModel(new StubDocumentService(), new ThrowingSectionSource("folder not found"));
+        var vm = new KneeboardViewModel(
+            new StubDocumentService(),
+            new ThrowingSectionSource("folder not found"),
+            NoGlobalTabs);
 
         vm.Document = DocumentFor([("A", [])]);
 
@@ -255,7 +258,8 @@ public class KneeboardViewModelTests
     {
         var vm = new KneeboardViewModel(
             new StubDocumentService(),
-            new FakeSectionSource(new Dictionary<string, string[]> { ["A"] = ["a1"] }));
+            new FakeSectionSource(new Dictionary<string, string[]> { ["A"] = ["a1"] }),
+            NoGlobalTabs);
 
         // A binding that throws while consuming a page notification — what BindableLayout does when
         // a dot template fails to hydrate, and the dots are the first page notification of the load.
@@ -274,7 +278,10 @@ public class KneeboardViewModelTests
     [Fact]
     public void SetDocument_AfterFailure_ClearsPreviousError()
     {
-        var vm = new KneeboardViewModel(new StubDocumentService(), new ThrowingSectionSource("folder not found"));
+        var vm = new KneeboardViewModel(
+            new StubDocumentService(),
+            new ThrowingSectionSource("folder not found"),
+            NoGlobalTabs);
         vm.Document = DocumentFor([("A", [])]);
 
         var recovered = Load(("A", ["a1"]));
@@ -282,6 +289,112 @@ public class KneeboardViewModelTests
         Assert.True(vm.HasError);
         Assert.False(recovered.HasError);
         Assert.Null(recovered.ErrorMessage);
+    }
+
+    // ── Global Tabs ────────────────────────────────────────────────────────────
+    //
+    // Global Tabs are just another kind of tab sharing the same Binder as Sections, so these tests
+    // mirror the equivalent Section-only tests above rather than inventing a second style: merged
+    // ordering (SetDocument_LoadsAllSections_FirstSelected), selection/paging/framing
+    // (SelectSection_* above), the broken-source failure
+    // (SetDocument_WhenSectionSourceThrows_SurfacesErrorAndFinishesLoading) and reset-on-switch
+    // (SetDocument_StartsEverySectionFittedToTheScreen).
+
+    [Fact]
+    public void SetDocument_AppendsEnabledGlobalTabsAfterSections_InConfiguredOrder()
+    {
+        var vm = Load(
+            [("A", ["a1"]), ("B", ["b1"])],
+            [("G2", ["g2-1"], 1, true), ("G1", ["g1-1"], 0, true)]);
+
+        // Sections first (A, B), then Global Tabs in configured Order (G1 before G2), regardless of
+        // the order they were fetched in.
+        Assert.Equal(2, vm.GlobalTabs.Count);
+        Assert.Equal("G1", vm.GlobalTabs[0].Title);
+        Assert.Equal("G2", vm.GlobalTabs[1].Title);
+
+        vm.SelectSectionCommand.Execute(vm.GlobalTabs[0]);
+        Assert.Equal("g1-1", CurrentPage(vm));
+
+        vm.SelectSectionCommand.Execute(vm.GlobalTabs[1]);
+        Assert.Equal("g2-1", CurrentPage(vm));
+    }
+
+    [Fact]
+    public void SetDocument_ExcludesDisabledGlobalTabsEntirely()
+    {
+        var vm = Load(
+            [("A", ["a1"])],
+            [("Enabled", ["e1"], 0, true), ("Disabled", ["d1"], 1, false)]);
+
+        Assert.Single(vm.GlobalTabs);
+        Assert.Equal("Enabled", vm.GlobalTabs[0].Title);
+    }
+
+    [Fact]
+    public void SelectGlobalTab_HighlightsThatTabAndShowsItsPage()
+    {
+        var vm = Load(
+            [("A", ["a1"])],
+            [("G", ["g1"], 0, true)]);
+
+        vm.SelectSectionCommand.Execute(vm.GlobalTabs[0]);
+
+        Assert.Equal([false], SelectedTabs(vm));
+        Assert.Equal([true], SelectedGlobalTabs(vm));
+        Assert.Equal("g1", CurrentPage(vm));
+    }
+
+    [Fact]
+    public void SelectGlobalTab_RevisitedTab_RestoresHowItWasFramedAndPaged()
+    {
+        var vm = Load(
+            [("A", ["a1"])],
+            [("G", ["g1", "g2"], 0, true)]);
+
+        vm.SelectSectionCommand.Execute(vm.GlobalTabs[0]);
+        vm.NextPageCommand.Execute(null);         // second page of G
+        vm.CurrentFraming = Zoomed;               // and zoomed in
+        vm.SelectSectionCommand.Execute(vm.Sections[0]); // away to A
+        vm.SelectSectionCommand.Execute(vm.GlobalTabs[0]); // and back
+
+        Assert.Equal("g2", CurrentPage(vm));
+        Assert.Equal(Zoomed, CurrentFraming(vm));
+    }
+
+    [Fact]
+    public void SetDocument_WhenGlobalTabSourceThrows_SurfacesErrorAndFinishesLoadingLikeABrokenSection()
+    {
+        var pagesByKey = new Dictionary<string, string[]> { ["A"] = ["a1"] };
+        var vm = new KneeboardViewModel(
+            new StubDocumentService(),
+            new PartlyBrokenSectionSource(pagesByKey, brokenKey: "G", "global tab source unreadable"),
+            new FakeGlobalTabsSettingsService([GlobalTabSettingFor(("G", [], 0, true))]));
+
+        vm.Document = DocumentFor([("A", ["a1"])]);
+
+        Assert.Equal("global tab source unreadable", vm.ErrorMessage);
+        Assert.True(vm.HasError);
+        Assert.Empty(vm.Sections);
+        Assert.Empty(vm.GlobalTabs);
+        Assert.False(vm.IsLoading);
+        Assert.Empty(CurrentPage(vm));
+    }
+
+    [Fact]
+    public void SetDocument_AnotherDocumentOpened_ResetsAGlobalTabsSelectionAndFraming()
+    {
+        var vm = Load(
+            [("A", ["a1"])],
+            [("G", ["g1"], 0, true)]);
+        vm.SelectSectionCommand.Execute(vm.GlobalTabs[0]);
+        vm.CurrentFraming = Zoomed;
+
+        vm.Document = DocumentFor([("A", ["a1"])]); // another mission opened; same Global Tabs config
+
+        Assert.Equal([true], SelectedTabs(vm));
+        Assert.Equal([false], SelectedGlobalTabs(vm));
+        Assert.Equal(Framing.Fit, CurrentFraming(vm));
     }
 
     // ── the screen's surface ───────────────────────────────────────────────────
@@ -304,9 +417,14 @@ public class KneeboardViewModelTests
     /// <summary>How the section on screen is framed — what the image view is zoomed and panned to.</summary>
     private static Framing CurrentFraming(KneeboardViewModel vm) => vm.CurrentFraming;
 
-    /// <summary>The tab bar's highlight, one flag per tab.</summary>
+    /// <summary>The Section group's highlight, one flag per Section.</summary>
     private static IReadOnlyList<bool> SelectedTabs(KneeboardViewModel vm) =>
         [.. vm.Sections.Select(s => s.IsSelected)];
+
+    /// <summary>The Global Tab group's highlight, one flag per Global Tab — the same underlying
+    /// <c>IsSelected</c> flag as a Section's, just read off the other bindable group.</summary>
+    private static IReadOnlyList<bool> SelectedGlobalTabs(KneeboardViewModel vm) =>
+        [.. vm.GlobalTabs.Select(t => t.IsSelected)];
 
     /// <summary>The notifications on which the markup re-reads the page and its dots.</summary>
     private static bool AnnouncesPage(PropertyChangedEventArgs e) =>
@@ -323,15 +441,38 @@ public class KneeboardViewModelTests
     /// <summary>Zoomed well in, reading the upper left of the page — any framing that isn't the fit.</summary>
     private static readonly Framing Zoomed = new(2.5, 0.2, 0.3);
 
-    private static KneeboardViewModel Load(params (string Label, string[] Pages)[] sections)
+    private static KneeboardViewModel Load(params (string Label, string[] Pages)[] sections) =>
+        Load(sections, []);
+
+    /// <summary>
+    /// Loads a document with the given sections and configures the given Global Tabs. Each Global
+    /// Tab's pages are keyed by its <c>Id</c>, the same way <see cref="FakeSectionSource"/> keys a
+    /// section's pages by its label — both are just the <see cref="ImageFolderSource.Folder"/> the
+    /// fake source looks pages up by, so Global Tabs and Sections share the one pages dictionary.
+    /// </summary>
+    private static KneeboardViewModel Load(
+        (string Label, string[] Pages)[] sections,
+        (string Id, string[] Pages, int Order, bool Enabled)[] globalTabs)
     {
+        var pagesByKey = sections.ToDictionary(s => s.Label, s => s.Pages);
+        foreach (var tab in globalTabs)
+            pagesByKey[tab.Id] = tab.Pages;
+
         var vm = new KneeboardViewModel(
             new StubDocumentService(),
-            new FakeSectionSource(sections.ToDictionary(s => s.Label, s => s.Pages)));
+            new FakeSectionSource(pagesByKey),
+            new FakeGlobalTabsSettingsService([.. globalTabs.Select(GlobalTabSettingFor)]));
 
         vm.Document = DocumentFor(sections);
         return vm;
     }
+
+    /// <summary>A settings service reporting no Global Tabs — the default for every test that isn't
+    /// specifically about them, so their behaviour is unchanged by this feature's addition.</summary>
+    private static readonly FakeGlobalTabsSettingsService NoGlobalTabs = new([]);
+
+    private static GlobalTabSetting GlobalTabSettingFor((string Id, string[] Pages, int Order, bool Enabled) tab) =>
+        new(tab.Id, tab.Id, new ImageFolderSource { Folder = tab.Id }, tab.Order, tab.Enabled);
 
     /// <summary>Turns forward the way repeated taps on the page edge do.</summary>
     private static void TurnForward(KneeboardViewModel vm, int pages)
@@ -429,9 +570,43 @@ public class KneeboardViewModelTests
             throw new DirectoryNotFoundException(message);
     }
 
+    /// <summary>
+    /// Like <see cref="FakeSectionSource"/>, except one key's source always fails — used to make a
+    /// single Global Tab (or, just as well, a single Section) the one broken source in an otherwise
+    /// healthy document, so a failure can be pinned to origin without every tab failing together.
+    /// </summary>
+    private sealed class PartlyBrokenSectionSource(
+        Dictionary<string, string[]> pagesByKey, string brokenKey, string message) : ISectionSource
+    {
+        public Task<IReadOnlyList<ReadOnlyMemory<byte>>> GetPagesAsync(ContentSource? source)
+        {
+            var key = ((ImageFolderSource)source!).Folder;
+            if (key == brokenKey)
+                throw new DirectoryNotFoundException(message);
+
+            return Task.FromResult<IReadOnlyList<ReadOnlyMemory<byte>>>(
+                [.. pagesByKey[key].Select(page => (ReadOnlyMemory<byte>)Encoding.UTF8.GetBytes(page))]);
+        }
+    }
+
     private sealed class StubDocumentService : IDocumentService
     {
         public Task<DocumentLoadResult> PickAndLoadAsync() => Task.FromResult(DocumentLoadResult.Cancelled());
         public Task<DocumentLoadResult> LoadFromPathAsync(string p) => Task.FromResult(DocumentLoadResult.Cancelled());
+    }
+
+    /// <summary>Reports a fixed list of Global Tabs, as configured by test setup. The mutating members
+    /// are never exercised through <see cref="KneeboardViewModel"/>, which only reads the list.</summary>
+    private sealed class FakeGlobalTabsSettingsService(IReadOnlyList<GlobalTabSetting> tabs) : IGlobalTabsSettingsService
+    {
+        public Task<IReadOnlyList<GlobalTabSetting>> GetTabsAsync() => Task.FromResult(tabs);
+
+        public Task<GlobalTabSetting> AddAsync(string label, ContentSource source) =>
+            throw new NotSupportedException();
+
+        public Task EditAsync(string id, string label, ContentSource source) => Task.CompletedTask;
+        public Task RemoveAsync(string id) => Task.CompletedTask;
+        public Task ReorderAsync(string id, int newOrder) => Task.CompletedTask;
+        public Task SetEnabledAsync(string id, bool enabled) => Task.CompletedTask;
     }
 }
