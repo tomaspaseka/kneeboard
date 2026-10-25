@@ -18,7 +18,7 @@ only where it sits in the order.
 ## Section
 
 A kind of `Tab`, owned by the document: a named tab within a document — "Mission Datacard",
-"Airfields Map". Has an id, a label, and exactly one content source.
+"Airfields Map", "Mission Brief". Has an id, a label, and exactly one content source.
 
 ## Content source
 
