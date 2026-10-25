@@ -5,7 +5,8 @@
   "title": "EPKK 2026-06-10",
   "sections": [
     { "id": "datacard", "label": "Mission Datacard", "source": { "type": "pdf", "path": "relative/or/absolute.pdf" } },
-    { "id": "airfields", "label": "Airfields Map", "source": { "type": "images", "folder": "relative/or/absolute/folder" } }
+    { "id": "airfields", "label": "Airfields Map", "source": { "type": "images", "folder": "relative/or/absolute/folder" } },
+    { "id": "brief", "label": "Mission Brief", "source": { "type": "pdf", "path": "relative/or/absolute.pdf" } }
   ]
 }
 ```
